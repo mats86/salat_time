@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #131313;
+  --foreground: #e5e2e1;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background-color: #131313;
+  min-height: max(884px, 100dvh);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(19, 19, 19, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .prayer-glow {
+    box-shadow: 0 0 40px 0 rgba(212, 175, 55, 0.1);
+  }
+
+  .islamic-pattern {
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.05;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+[dir='rtl'] .font-arabic,
+[dir='rtl'] .rtl-text {
+  font-family: var(--font-amiri), serif;
+}

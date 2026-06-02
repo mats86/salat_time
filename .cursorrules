@@ -1,0 +1,531 @@
+# 🕌 Salat Zeit — Cursor Projekt-Prompt
+
+> Diesen Prompt in Cursor als erstes einfügen (z.B. in `.cursorrules` oder direkt im Chat).
+
+---
+
+## 🎯 Projektübersicht
+
+Ich baue eine **Progressive Web App (PWA)** namens **"Salat Zeit"** (صلاة) — eine islamische Gebetszeiten-App mit Moschee-Finder, dreisprachig (Arabisch / Deutsch / Englisch), mit Admin- und Moschee-Staff-Dashboard.
+
+**Tech Stack:**
+- **Frontend:** Next.js 14 (App Router), TypeScript, Tailwind CSS
+- **Backend:** Self-hosted Directus 11 (Docker) auf `directus.salatzeit.de`
+- **Auth:** Directus Auth (E-Mail + Google OAuth)
+- **Gebetszeiten API:** [aladhan.com](https://aladhan.com/prayer-times-api) (kostenlos)
+- **Moscheen:** Google Places API + eigene Directus-Datenbank
+- **Styling:** Dark Theme, islamisches Design, Gold-Akzente (#c9a84c), Dunkelgrün (#1a3a2a)
+- **Fonts:** Amiri (arabisch), DM Sans (lateinisch)
+- **PWA:** next-pwa, installierbar auf iOS/Android/Desktop
+
+---
+
+## 📁 Projektstruktur (Next.js App Router)
+
+```
+salat-zeit/
+├── app/
+│   ├── layout.tsx                    # Root layout, PWA meta, fonts
+│   ├── page.tsx                      # User-App Startseite (Gebetszeiten + Moscheen)
+│   ├── mosque/[id]/page.tsx          # Moschee-Detailseite
+│   ├── auth/
+│   │   ├── login/page.tsx            # Login (E-Mail + Google)
+│   │   └── callback/page.tsx         # Google OAuth Callback
+│   ├── staff/
+│   │   ├── layout.tsx                # Staff-Guard (nur eingeloggte Staff)
+│   │   ├── page.tsx                  # Staff Dashboard Übersicht
+│   │   ├── times/page.tsx            # Gebetszeiten bearbeiten
+│   │   ├── events/page.tsx           # Events verwalten
+│   │   └── info/page.tsx             # Moschee-Info bearbeiten
+│   └── admin/
+│       ├── layout.tsx                # Admin-Guard (nur Admins)
+│       ├── page.tsx                  # Admin Dashboard
+│       ├── mosques/page.tsx          # Moscheen verwalten
+│       ├── mosques/[id]/page.tsx     # Moschee bearbeiten
+│       ├── staff/page.tsx            # Mitarbeiter verwalten
+│       ├── requests/page.tsx         # Change Requests genehmigen
+│       └── settings/page.tsx         # App-Einstellungen
+├── components/
+│   ├── ui/                           # Basis-UI-Komponenten
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   ├── Modal.tsx
+│   │   ├── Badge.tsx
+│   │   └── Spinner.tsx
+│   ├── prayer/
+│   │   ├── PrayerTimeHero.tsx        # Nächstes Gebet + Countdown
+│   │   ├── PrayerGrid.tsx            # 6-Zeiten Raster
+│   │   └── PrayerRow.tsx             # Zeile mit Icon/Name/Zeit
+│   ├── mosque/
+│   │   ├── MosqueCard.tsx            # Karte in der Liste
+│   │   ├── MosqueSheet.tsx           # Bottom Sheet Detail
+│   │   ├── MosqueMap.tsx             # Google Maps Embed
+│   │   └── MosqueBadges.tsx          # Ausstattungs-Badges
+│   ├── layout/
+│   │   ├── LangSwitcher.tsx          # DE/AR/EN Umschalter
+│   │   ├── BottomNav.tsx             # Mobile Navigation
+│   │   └── Sidebar.tsx               # Dashboard Sidebar
+│   └── forms/
+│       ├── PrayerTimeForm.tsx        # Gebetszeiten Editor (Staff)
+│       ├── EventForm.tsx             # Event Formular (Staff)
+│       └── MosqueForm.tsx            # Moschee Formular (Admin)
+├── lib/
+│   ├── directus.ts                   # Directus SDK Client
+│   ├── directus-server.ts            # Server-side Directus Client
+│   ├── aladhan.ts                    # Aladhan API Wrapper
+│   ├── auth.ts                       # Auth Helpers (Token, User)
+│   └── i18n.ts                       # Übersetzungen DE/AR/EN
+├── hooks/
+│   ├── useLocation.ts                # Geolocation Hook
+│   ├── usePrayerTimes.ts             # Gebetszeiten + Countdown
+│   ├── useNearbyMosques.ts           # Moscheen in der Nähe
+│   └── useAuth.ts                    # Auth State
+├── types/
+│   └── index.ts                      # Alle TypeScript Types
+├── public/
+│   ├── manifest.json                 # PWA Manifest
+│   └── icons/                        # App Icons
+├── next.config.js                    # Next.js + PWA Config
+└── .env.local                        # Environment Variables
+```
+
+---
+
+## 🗄️ Directus Datenstruktur
+
+**Directus URL:** `https://directus.salatzeit.de`
+
+### Collections:
+
+#### `mosques`
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | uuid | Primary Key |
+| status | string | `published` / `draft` / `archived` |
+| name | string | Deutscher Name |
+| name_ar | string | Arabischer Name |
+| name_en | string | Englischer Name |
+| city | string | Stadt |
+| address | string | Vollständige Adresse |
+| latitude | float | GPS Breitengrad |
+| longitude | float | GPS Längengrad |
+| opening_hours | text | Öffnungszeiten (mehrzeilig) |
+| has_women_area | boolean | Frauenbereich |
+| has_parking | boolean | Parkplatz |
+| has_wudu | boolean | Wudu-Bereich |
+| has_wheelchair | boolean | Rollstuhlgerecht |
+| phone | string | Telefon (optional) |
+| website | string | Webseite (optional) |
+| image | uuid → directus_files | Foto |
+
+#### `mosque_prayer_times`
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | uuid | Primary Key |
+| mosque_id | uuid → mosques | Moschee |
+| status | string | `approved` / `pending` / `rejected` |
+| valid_from | date | Gültig ab |
+| valid_until | date | Gültig bis (null = dauerhaft) |
+| fajr | time | Fajr Zeit (null = Standortzeit) |
+| sunrise | time | Sonnenaufgang |
+| dhuhr | time | Dhuhr |
+| asr | time | Asr |
+| maghrib | time | Maghrib |
+| isha | time | Isha |
+| juma | time | Freitagsgebet (optional) |
+| submitted_by | uuid → directus_users | Eingereicht von |
+
+#### `mosque_events`
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | uuid | Primary Key |
+| mosque_id | uuid → mosques | Moschee |
+| status | string | `published` / `pending` / `rejected` |
+| title | string | Titel Deutsch |
+| title_ar | string | Titel Arabisch |
+| title_en | string | Titel Englisch |
+| description | text | Beschreibung |
+| event_date | date | Datum |
+| event_time | time | Uhrzeit |
+| is_recurring | boolean | Wiederkehrend |
+| recurrence | string | `weekly` / `monthly` |
+| submitted_by | uuid → directus_users | |
+
+#### `mosque_staff`
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | integer | Primary Key |
+| user_id | uuid → directus_users | Directus User |
+| mosque_id | uuid → mosques | Zugeordnete Moschee |
+| role | string | `staff` / `imam` / `manager` |
+
+#### `change_requests`
+| Feld | Typ | Beschreibung |
+|------|-----|--------------|
+| id | uuid | Primary Key |
+| mosque_id | uuid → mosques | Betroffene Moschee |
+| submitted_by | uuid → directus_users | Eingereicht von |
+| type | string | `prayer_times` / `event` / `mosque_info` / `new_mosque` |
+| status | string | `pending` / `approved` / `rejected` |
+| payload | json | Geänderte Daten |
+| admin_note | text | Admin-Kommentar bei Ablehnung |
+| reviewed_by | uuid → directus_users | Genehmigt/abgelehnt von |
+| date_created | timestamp | |
+| date_reviewed | timestamp | |
+
+---
+
+## 🔐 Auth-System
+
+### Rollen in Directus:
+- **Administrator** (Directus built-in): Vollzugriff, Admin-Dashboard
+- **Moschee Staff**: Nur eigene Moschee bearbeiten, Änderungen via Change Requests
+
+### Login-Flows:
+1. **E-Mail + Passwort** → `POST /auth/login` → JWT → localStorage
+2. **Google OAuth** → Redirect zu `{DIRECTUS_URL}/auth/login/google?redirect={callback_url}` → Callback mit `?access_token=...&refresh_token=...`
+
+### Token-Handling:
+- Access Token: 15min TTL → in `localStorage` als `dt_access`
+- Refresh Token: 7 Tage TTL → in `localStorage` als `dt_refresh`
+- Auto-Refresh bei 401 Responses
+
+### Route Guards:
+- `/staff/*` → nur eingeloggte User mit Rolle "Moschee Staff"
+- `/admin/*` → nur eingeloggte User mit `admin_access: true`
+- Redirect zu `/auth/login` wenn nicht eingeloggt
+
+---
+
+## 🌐 Mehrsprachigkeit (i18n)
+
+Drei Sprachen, umschaltbar zur Laufzeit (kein Page Reload):
+- `de` — Deutsch (Standard)
+- `ar` — Arabisch (RTL, Schrift: Amiri)
+- `en` — Englisch
+
+### Gebetsnamen:
+| Key | DE | AR | EN |
+|-----|----|----|-----|
+| Fajr | Morgengebet | الفجر | Fajr |
+| Sunrise | Sonnenaufgang | الشروق | Sunrise |
+| Dhuhr | Mittagsgebet | الظهر | Dhuhr |
+| Asr | Nachmittagsgebet | العصر | Asr |
+| Maghrib | Abendgebet | المغرب | Maghrib |
+| Isha | Nachtgebet | العشاء | Isha |
+
+### RTL-Handling:
+- `document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'`
+- Tailwind: `dir="rtl"` auf Root, RTL-Klassen verwenden
+
+---
+
+## 🕌 User-App Features
+
+### Startseite (`/`)
+1. **Standort ermitteln** via `navigator.geolocation` (einmalig, gecacht in sessionStorage)
+2. **Gebetszeiten laden** von Aladhan API: `GET https://api.aladhan.com/v1/timings/{date}?latitude={lat}&longitude={lng}&method=3`
+3. **Hijri-Datum** berechnen (Algorithmus im Code, kein extra API-Call)
+4. **Nächstes Gebet** ermitteln + Live-Countdown (sekündlich)
+5. **6 Gebetskarten** (Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha) — aktives hervorgehoben, vergangene gedimmt
+6. **Nahe Moscheen** laden von: `GET {DIRECTUS_URL}/salat/nearby?lat=...&lng=...&radius=5000`
+7. **Moschee-Karte** antippen → Bottom Sheet mit:
+   - Moschee-Gebetszeiten (eigen oder Standort-Fallback)
+   - Ausstattungs-Badges (👩 Frauen, 🅿️ Parkplatz, 💧 Wudu)
+   - Öffnungszeiten
+   - Kommende Events
+   - Link zu Google Maps
+
+### Aladhan API Response Mapping:
+```typescript
+// GET https://api.aladhan.com/v1/timings/DD-MM-YYYY?latitude=X&longitude=Y&method=3
+// Response: data.timings = { Fajr: "04:45", Sunrise: "05:55", Dhuhr: "13:15", ... }
+// Response: data.date.hijri = { day, month.en, year }
+```
+
+### PWA:
+- `manifest.json` mit `display: "standalone"`, `theme_color: "#1a3a2a"`
+- Service Worker: Cache-First für Assets, Network-First für API-Calls
+- Install-Banner wenn `beforeinstallprompt` feuert
+
+---
+
+## 👨‍💼 Staff-Dashboard Features (`/staff`)
+
+### Guard:
+```typescript
+// In layout.tsx
+const user = await getServerUser(); // Server-side Token aus Cookie oder Header
+if (!user || !isStaff(user)) redirect('/auth/login');
+const mosque = await getStaffMosque(user.id); // aus mosque_staff Collection
+if (!mosque) redirect('/auth/login?error=no_mosque');
+```
+
+### Seiten:
+
+#### Übersicht (`/staff`)
+- Eigene Moschee-Info anzeigen
+- Heutige Gebetszeiten (eigen vs. Standort-Label)
+- Anzahl eigene Zeiten, aktive Events
+- Letzte Change Requests mit Status-Badges
+
+#### Gebetszeiten (`/staff/times`)
+- 6 Gebete mit Toggle (Eigene Zeit an/aus)
+- Wenn aus → Standortzeit wird verwendet (Label: "Standortzeit")
+- Wenn an → Zeitpicker
+- "Einreichen" → `POST /items/change_requests` mit `type: "prayer_times"`
+- Pending-Banner solange Anfrage offen
+
+#### Events (`/staff/events`)
+- Liste eigener Events (status: pending/published)
+- Formular: Titel (DE/AR/EN), Datum, Uhrzeit, Wiederkehrend
+- Einreichen → `POST /items/change_requests` mit `type: "event"`
+- Löschen (nur eigene, nur published)
+
+#### Moschee-Info (`/staff/info`)
+- Name, Adresse, Öffnungszeiten, Ausstattungs-Checkboxen
+- Einreichen → `POST /items/change_requests` mit `type: "mosque_info"`
+
+---
+
+## 👑 Admin-Dashboard Features (`/admin`)
+
+### Übersicht (`/admin`)
+- Stats: Moscheen gesamt, aktive Staff, offene Anfragen, App-Nutzer
+- Tabelle zuletzt geänderter Moscheen
+- Schnell-Link zu offenen Anfragen
+
+### Moscheen (`/admin/mosques`)
+- Tabelle mit Suche, Filter (Status), Sortierung
+- Modal: Neue Moschee anlegen (alle Felder)
+- Inline: Bearbeiten, Status ändern, Archivieren
+
+### Mitarbeiter (`/admin/staff`)
+- Tabelle: User, E-Mail, Moschee, Rolle
+- Staff einladen per E-Mail (Directus Invite API)
+- Staff-Moschee-Zuordnung ändern
+- Staff entfernen
+
+### Anfragen (`/admin/requests`) — wichtigste Seite
+- Alle `change_requests` mit `status: "pending"`
+- Pro Request: Typ, Moschee, Eingereicht von, Datum, Payload-Vorschau
+- **Genehmigen** → `PATCH /items/change_requests/{id}` mit `{status: "approved"}`
+  - Directus Hook übernimmt dann automatisch die Daten
+- **Ablehnen** → Modal mit Pflichtfeld "Ablehnungsgrund" → `{status: "rejected", admin_note: "..."}`
+- E-Mail-Benachrichtigung an Staff (via Directus Hook)
+
+### Einstellungen (`/admin/settings`)
+- Standard-Berechnungsmethode (Aladhan method parameter)
+- Google Maps API Key
+- App-Name (mehrsprachig)
+
+---
+
+## 🎨 Design System
+
+### Farben (Tailwind custom config):
+```javascript
+// tailwind.config.js
+colors: {
+  deep: '#0f2318',        // Hintergrund
+  forest: '#1a3a2a',      // Sidebar, Cards
+  moss: '#2a5c3f',        // Buttons, aktive Elemente
+  sage: '#3d7a57',        // Hover-States
+  mint: '#5fa87a',        // Akzente, Icons
+  light: '#a8d5b5',       // Helle Texte
+  pale: '#e8f5ee',        // Haupt-Textfarbe
+  gold: '#c9a84c',        // Highlights, nächstes Gebet
+  'gold-light': '#f0d080', // Gold hell
+}
+```
+
+### Komponenten-Stile:
+```tsx
+// Card
+<div className="bg-forest border border-white/10 rounded-2xl">
+
+// Button primary
+<button className="bg-gold text-deep font-medium px-4 py-2 rounded-xl hover:bg-gold-light transition">
+
+// Badge
+<span className="text-[11px] px-2 py-0.5 rounded-full bg-mint/15 text-mint border border-mint/25">
+
+// Input
+<input className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-pale placeholder:text-pale/40 focus:border-sage outline-none w-full">
+```
+
+### Islamisches Ornament:
+- Geometrisches Hintergrundmuster mit `repeating-linear-gradient` (60deg, -60deg, opacity 3%)
+- Kreisförmige dekorative Ringe bei Hero-Elementen
+- Arabische Schrift immer in Amiri font, color: `gold` oder `gold-light`
+
+---
+
+## 📡 API-Client (`lib/directus.ts`)
+
+```typescript
+import { createDirectus, rest, authentication, readItems, createItem, updateItem } from '@directus/sdk';
+
+const directus = createDirectus('https://directus.salatzeit.de')
+  .with(authentication('json'))
+  .with(rest());
+
+export default directus;
+```
+
+### Server-side (`lib/directus-server.ts`):
+```typescript
+// Für Server Components: statischer Token (read-only public data)
+const serverDirectus = createDirectus('https://directus.salatzeit.de')
+  .with(staticToken(process.env.DIRECTUS_STATIC_TOKEN!))
+  .with(rest());
+```
+
+### Custom Endpoint für Moscheen:
+```typescript
+// GET https://directus.salatzeit.de/salat/nearby?lat=X&lng=Y&radius=5000
+// Response: { data: Mosque[] } mit distance_km und prayer_times merged
+```
+
+---
+
+## 🔧 Environment Variables (`.env.local`)
+
+```env
+# Directus
+NEXT_PUBLIC_DIRECTUS_URL=https://directus.salatzeit.de
+DIRECTUS_STATIC_TOKEN=xxx   # Read-only Token für Server Components
+
+# Google
+NEXT_PUBLIC_GOOGLE_MAPS_KEY=xxx
+NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=xxx
+
+# App
+NEXT_PUBLIC_APP_URL=https://salatzeit.de
+NEXT_PUBLIC_ALADHAN_METHOD=3   # Muslim World League
+```
+
+---
+
+## 📦 Package Dependencies
+
+```json
+{
+  "dependencies": {
+    "next": "14.x",
+    "react": "18.x",
+    "typescript": "5.x",
+    "@directus/sdk": "^17.x",
+    "next-pwa": "^5.x",
+    "tailwindcss": "^3.x",
+    "clsx": "^2.x",
+    "date-fns": "^3.x",
+    "@googlemaps/js-api-loader": "^1.x"
+  }
+}
+```
+
+---
+
+## 🚀 Setup-Reihenfolge für Cursor
+
+Bitte in dieser Reihenfolge vorgehen:
+
+1. **`next.config.js`** — PWA + Image Domains konfigurieren
+2. **`tailwind.config.js`** — Custom Colors + Amiri/DM Sans Fonts
+3. **`lib/directus.ts`** — Directus SDK Client (client + server)
+4. **`lib/aladhan.ts`** — Aladhan API Wrapper mit Typen
+5. **`lib/i18n.ts`** — Alle Übersetzungen (DE/AR/EN)
+6. **`types/index.ts`** — Alle TypeScript-Interfaces
+7. **`hooks/`** — useLocation, usePrayerTimes, useAuth, useNearbyMosques
+8. **`components/ui/`** — Button, Card, Input, Modal, Badge, Spinner
+9. **`app/layout.tsx`** — Root Layout mit Font-Loading + PWA Meta
+10. **`app/page.tsx`** — User-App Startseite
+11. **`components/prayer/`** — PrayerTimeHero, PrayerGrid
+12. **`components/mosque/`** — MosqueCard, MosqueSheet
+13. **`app/auth/`** — Login + Callback Seiten
+14. **`app/staff/`** — Staff Dashboard (alle Unterseiten)
+15. **`app/admin/`** — Admin Dashboard (alle Unterseiten)
+16. **`public/manifest.json`** — PWA Manifest
+
+---
+
+## ✅ Wichtige Implementierungshinweise
+
+### Gebetszeiten-Logik:
+```typescript
+// Nächstes Gebet ermitteln
+const PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+
+function getNextPrayer(timings: PrayerTimings): { name: string; time: string } {
+  const now = new Date();
+  for (const name of PRAYER_ORDER) {
+    const [h, m] = timings[name].split(':').map(Number);
+    const prayerTime = new Date();
+    prayerTime.setHours(h, m, 0, 0);
+    if (prayerTime > now) return { name, time: timings[name] };
+  }
+  return { name: 'Fajr', time: timings['Fajr'] }; // Nächster Tag
+}
+```
+
+### Moschee-Gebetszeiten (Fallback-Logik):
+```typescript
+// Moschee hat eigene Zeit → anzeigen mit "Eigene Zeit" Badge
+// Moschee hat null für dieses Gebet → Standortzeit verwenden
+function getMergedTime(mosqueTime: string | null, locationTime: string): {
+  time: string;
+  isCustom: boolean;
+} {
+  return mosqueTime
+    ? { time: mosqueTime, isCustom: true }
+    : { time: locationTime, isCustom: false };
+}
+```
+
+### RTL Support:
+```typescript
+// In LangSwitcher.tsx
+function setLanguage(lang: 'de' | 'ar' | 'en') {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  localStorage.setItem('lang', lang);
+}
+```
+
+### Change Request Workflow:
+```
+Staff ändert Zeiten
+  → POST /items/change_requests { type: "prayer_times", payload: {...}, mosque_id }
+  → Status: "pending"
+  → Admin sieht Anfrage in /admin/requests
+  → Admin genehmigt → PATCH /items/change_requests/{id} { status: "approved" }
+  → Directus Hook: übernimmt payload automatisch in mosque_prayer_times
+  → E-Mail an Staff
+```
+
+### Staff darf NUR:
+- Eigene Moschee lesen
+- Change Requests erstellen (nicht direkt Zeiten/Info ändern)
+- Eigene Events löschen
+- Eigene Change Requests lesen
+
+---
+
+## 🐳 Directus Docker (Referenz)
+
+Directus läuft bereits auf `directus.salatzeit.de` mit:
+- PostgreSQL 16
+- Redis 7 (Cache)
+- Custom Hook: `extensions/hooks/salat-hooks/` (Change Request Workflow + Staff Guard)
+- Custom Endpoint: `extensions/endpoints/salat/` (`/salat/nearby`, `/salat/mosque/:id`)
+- Google OAuth: `AUTH_GOOGLE_*` konfiguriert
+
+**Rollen:**
+- `Administrator` → Vollzugriff
+- `Moschee Staff` (Role ID in `.env`) → nur eigene Moschee via Change Requests
+
+---
+
+*بارك الله فيك 🤲 — Viel Erfolg beim Bauen!*
