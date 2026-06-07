@@ -1,38 +1,34 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import directus, { readItems } from '@/lib/directus';
-import { haversineKm } from '@/lib/aladhan';
 import type { Mosque } from '@/types';
 
 export function useNearbyMosques(lat?: number, lng?: number, radiusKm = 50) {
   const [mosques, setMosques] = useState<Mosque[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (lat == null || lng == null) return;
+    if (lat == null || lng == null) {
+      setMosques([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const items = await directus.request(
-        readItems('mosques', {
-          filter: { status: { _eq: 'published' } },
-          fields: ['*'],
-          limit: 100,
-        })
-      );
-      const withDistance = items
-        .filter((m) => m.latitude != null && m.longitude != null)
-        .map((m) => ({
-          ...m,
-          distance_km: haversineKm(lat, lng, m.latitude!, m.longitude!),
-        }))
-        .filter((m) => m.distance_km <= radiusKm)
-        .sort((a, b) => (a.distance_km ?? 0) - (b.distance_km ?? 0));
-      setMosques(withDistance);
+      const params = new URLSearchParams({
+        lat: String(lat),
+        lng: String(lng),
+        radius: String(radiusKm),
+      });
+      const res = await fetch(`/api/mosques?${params}`);
+      if (!res.ok) throw new Error('Failed to load mosques');
+      const json = await res.json();
+      setMosques(json.data ?? []);
       setError(null);
     } catch {
       setError('Failed to load mosques');
+      setMosques([]);
     } finally {
       setLoading(false);
     }

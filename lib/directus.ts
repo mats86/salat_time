@@ -18,8 +18,11 @@ export interface DirectusSchema {
   change_requests: ChangeRequest[];
 }
 
-const directusUrl =
+const directusPublicUrl =
   process.env.NEXT_PUBLIC_DIRECTUS_URL ?? 'https://directus.alattas.de';
+
+const directusUrl =
+  typeof window !== 'undefined' ? '/api/directus' : directusPublicUrl;
 
 const directus = createDirectus<DirectusSchema>(directusUrl)
   .with(authentication('json'))
@@ -37,5 +40,5 @@ export {
 
 export function getAssetUrl(fileId: string | null | undefined): string | null {
   if (!fileId) return null;
-  return `${directusUrl}/assets/${fileId}`;
+  return `${directusPublicUrl}/assets/${fileId}`;
 }

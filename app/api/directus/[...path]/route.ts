@@ -18,6 +18,10 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
     if (value) headers.set(key, value);
   }
 
+  if (!headers.has('authorization') && process.env.DIRECTUS_STATIC_TOKEN) {
+    headers.set('Authorization', `Bearer ${process.env.DIRECTUS_STATIC_TOKEN}`);
+  }
+
   const init: RequestInit = {
     method,
     headers,
