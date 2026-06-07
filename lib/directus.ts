@@ -21,10 +21,14 @@ export interface DirectusSchema {
 const directusPublicUrl =
   process.env.NEXT_PUBLIC_DIRECTUS_URL ?? 'https://directus.alattas.de';
 
-const directusUrl =
-  typeof window !== 'undefined' ? '/api/directus' : directusPublicUrl;
+function resolveDirectusUrl() {
+  if (typeof window !== 'undefined') {
+    return `${window.location.origin}/api/directus`;
+  }
+  return directusPublicUrl;
+}
 
-const directus = createDirectus<DirectusSchema>(directusUrl)
+const directus = createDirectus<DirectusSchema>(resolveDirectusUrl())
   .with(authentication('json'))
   .with(rest());
 
