@@ -2,6 +2,7 @@ import type { DirectusUser } from '@/types';
 
 const ACCESS_KEY = 'dt_access';
 const REFRESH_KEY = 'dt_refresh';
+const BIO_REFRESH_KEY = 'bio_refresh';
 
 function getDirectusProxyBase(): string {
   return '/api/directus';
@@ -19,6 +20,19 @@ export function getAccessToken(): string | null {
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(REFRESH_KEY);
+}
+
+export function getBiometricRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(BIO_REFRESH_KEY);
+}
+
+export function setBiometricRefreshToken(refresh: string) {
+  localStorage.setItem(BIO_REFRESH_KEY, refresh);
+}
+
+export function clearBiometricRefreshToken() {
+  localStorage.removeItem(BIO_REFRESH_KEY);
 }
 
 export function setTokens(access: string, refresh: string) {
@@ -70,8 +84,11 @@ export async function fetchCurrentUser(accessToken: string): Promise<DirectusUse
   return json.data ?? null;
 }
 
-export async function refreshAccessToken(): Promise<string | null> {
-  const refresh = getRefreshToken();
+export async function refreshAccessToken(
+  source: 'session' | 'biometric' = 'session'
+): Promise<string | null> {
+  const refresh =
+    source === 'biometric' ? getBiometricRefreshToken() : getRefreshToken();
   if (!refresh) return null;
   const res = await fetch(`${getDirectusProxyBase()}/auth/refresh`, {
     method: 'POST',
@@ -79,7 +96,11 @@ export async function refreshAccessToken(): Promise<string | null> {
     body: JSON.stringify({ refresh_token: refresh }),
   });
   if (!res.ok) {
-    clearTokens();
+    if (source === 'biometric') {
+      clearBiometricRefreshToken();
+    } else {
+      clearTokens();
+    }
     return null;
   }
   const json = await res.json();
@@ -87,14 +108,26 @@ export async function refreshAccessToken(): Promise<string | null> {
   const newRefresh = json.data?.refresh_token;
   if (access) {
     setTokens(access, newRefresh ?? refresh);
+    if (source === 'biometric' || getBiometricRefreshToken()) {
+      setBiometricRefreshToken(newRefresh ?? refresh);
+    }
     return access;
   }
   return null;
 }
 
-export function getGoogleOAuthUrl(redirectUrl: string): string {
+export function getOAuthCallbackUrl(): string {
+  const base =
+    (typeof window !== 'undefined'
+      ? process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL) ?? 'http://localhost:3000';
+  return `${base.replace(/\/$/, '')}/auth/callback`;
+}
+
+export function getGoogleOAuthUrl(redirectUrl?: string): string {
   const base = getDirectusPublicBase();
-  return `${base}/auth/login/google?redirect=${encodeURIComponent(redirectUrl)}`;
+  const redirect = redirectUrl ?? getOAuthCallbackUrl();
+  return `${base}/auth/login/google?redirect=${encodeURIComponent(redirect)}`;
 }
 
 export async function loginWithEmailPassword(email: string, password: string): Promise<{

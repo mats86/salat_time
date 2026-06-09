@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import directus from '@/lib/directus';
 import {
   getAccessToken,
+  getRefreshToken,
   clearTokens,
   fetchCurrentUser,
   refreshAccessToken,
@@ -11,6 +12,7 @@ import {
   isAdmin,
   loginWithEmailPassword,
 } from '@/lib/auth';
+import { syncBiometricRefreshToken } from '@/lib/biometric';
 import type { DirectusUser } from '@/types';
 
 export function useAuth() {
@@ -34,6 +36,8 @@ export function useAuth() {
     }
     if (token && u) {
       directus.setToken(token);
+      const refresh = getRefreshToken();
+      if (refresh) syncBiometricRefreshToken(refresh);
     }
     setUser(u);
     setLoading(false);
@@ -46,7 +50,10 @@ export function useAuth() {
   const login = async (email: string, password: string) => {
     const result = await loginWithEmailPassword(email, password);
     localStorage.setItem('dt_access', result.access_token);
-    if (result.refresh_token) localStorage.setItem('dt_refresh', result.refresh_token);
+    if (result.refresh_token) {
+      localStorage.setItem('dt_refresh', result.refresh_token);
+      syncBiometricRefreshToken(result.refresh_token);
+    }
     directus.setToken(result.access_token);
     await loadUser();
   };

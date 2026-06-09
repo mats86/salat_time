@@ -24,6 +24,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     { href: '/staff/times', icon: 'schedule', label: tr.prayerTimes },
     { href: '/staff/events', icon: 'event', label: tr.events },
     { href: '/staff/info', icon: 'mosque', label: tr.mosqueInfo },
+    { href: '/staff/settings', icon: 'settings', label: tr.settings },
   ];
 
   if (loading) {

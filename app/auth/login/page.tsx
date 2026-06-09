@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLang } from '@/components/providers/LangProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useBiometric } from '@/hooks/useBiometric';
 import { GoogleIcon } from '@/components/auth/GoogleIcon';
 import { getGoogleOAuthUrl } from '@/lib/auth';
+import { isBiometricEnabled, isPwaInstalled } from '@/lib/biometric';
 import type { Lang } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +24,7 @@ const LANGS: { code: Lang; label: string }[] = [
 export default function LoginPage() {
   const { lang, setLang, tr } = useLang();
   const { login } = useAuth();
+  const { loginWithBiometric, loading: bioLoading } = useBiometric();
   const router = useRouter();
   const cardRef = useRef<HTMLDivElement>(null);
   const orbRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -32,6 +35,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showBiometric, setShowBiometric] = useState(false);
 
   const brandName = lang === 'ar' ? tr.appNameAr : tr.appName;
 
@@ -41,6 +45,10 @@ export default function LoginPage() {
       setError(tr.loginFailed);
     }
   }, [tr.loginFailed]);
+
+  useEffect(() => {
+    setShowBiometric(isPwaInstalled() && isBiometricEnabled());
+  }, []);
 
   useEffect(() => {
     const handleMove = (e: MouseEvent) => {
@@ -69,8 +77,29 @@ export default function LoginPage() {
   }, []);
 
   const handleGoogleLogin = () => {
-    const callbackUrl = `${window.location.origin}/auth/callback`;
-    window.location.href = getGoogleOAuthUrl(callbackUrl);
+    window.location.href = getGoogleOAuthUrl();
+  };
+
+  const redirectAfterLogin = async (token: string) => {
+    const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+    const { fetchCurrentUser, isAdmin, isStaff } = await import('@/lib/auth');
+    const u = await fetchCurrentUser(token);
+    if (redirectTo) router.push(redirectTo);
+    else if (u && isAdmin(u)) router.push('/admin');
+    else if (u && isStaff(u)) router.push('/staff');
+    else router.push('/staff');
+  };
+
+  const handleBiometricLogin = async () => {
+    setError(null);
+    const { user: u, error: bioErr } = await loginWithBiometric();
+    if (!u) {
+      setError(bioErr === 'expired' ? tr.biometricExpired : tr.biometricFailed);
+      return;
+    }
+    const token = localStorage.getItem('dt_access');
+    if (token) await redirectAfterLogin(token);
+    else router.push('/staff');
   };
 
   const cycleLanguage = () => {
@@ -103,18 +132,9 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(email, password);
-      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
       const token = localStorage.getItem('dt_access');
-      if (token) {
-        const { fetchCurrentUser, isAdmin, isStaff } = await import('@/lib/auth');
-        const u = await fetchCurrentUser(token);
-        if (redirectTo) router.push(redirectTo);
-        else if (u && isAdmin(u)) router.push('/admin');
-        else if (u && isStaff(u)) router.push('/staff');
-        else router.push('/staff');
-      } else {
-        router.push('/staff');
-      }
+      if (token) await redirectAfterLogin(token);
+      else router.push('/staff');
     } catch (err: unknown) {
       setError(getReadableError(err));
     } finally {
@@ -253,22 +273,20 @@ export default function LoginPage() {
             <span className="font-title-md text-title-md">{tr.loginWithGoogle}</span>
           </button>
 
-          <div className="flex gap-4 mt-stack-md w-full">
+          {showBiometric && (
             <button
               type="button"
-              className="flex-1 h-14 login-glass-mobile rounded-xl flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all"
-              aria-label="Fingerprint login"
+              onClick={handleBiometricLogin}
+              disabled={bioLoading}
+              className="mt-stack-md w-full h-14 login-glass-mobile rounded-xl flex items-center justify-center gap-3 text-on-surface hover:text-on-surface transition-all border border-outline-variant/20 hover:border-secondary/40 active:scale-[0.98] disabled:opacity-60"
+              aria-label={tr.biometricLogin}
             >
               <span className="material-symbols-outlined login-mobile-icon">fingerprint</span>
+              <span className="font-title-md text-title-md">
+                {bioLoading ? tr.loginAuthenticating : tr.biometricLogin}
+              </span>
             </button>
-            <button
-              type="button"
-              className="flex-1 h-14 login-glass-mobile rounded-xl flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-all"
-              aria-label="Face login"
-            >
-              <span className="material-symbols-outlined login-mobile-icon">face</span>
-            </button>
-          </div>
+          )}
         </main>
 
         <footer className="w-full z-10 flex flex-col items-center gap-6">
@@ -484,6 +502,21 @@ export default function LoginPage() {
                   <GoogleIcon className="w-5 h-5 shrink-0" />
                   <span className="font-title-md text-title-md text-on-surface">{tr.loginWithGoogle}</span>
                 </button>
+
+                {showBiometric && (
+                  <button
+                    type="button"
+                    onClick={handleBiometricLogin}
+                    disabled={bioLoading}
+                    className="w-full py-4 rounded-lg flex items-center justify-center gap-3 border border-outline-variant/30 bg-surface/20 hover:border-secondary/40 hover:bg-surface/40 transition-all active:scale-[0.98] disabled:opacity-60"
+                    aria-label={tr.biometricLogin}
+                  >
+                    <span className="material-symbols-outlined">fingerprint</span>
+                    <span className="font-title-md text-title-md text-on-surface">
+                      {bioLoading ? tr.loginAuthenticating : tr.biometricLogin}
+                    </span>
+                  </button>
+                )}
               </form>
 
               <div className="mt-stack-lg pt-8 border-t border-outline-variant/10 flex flex-col items-center gap-4 text-center">
