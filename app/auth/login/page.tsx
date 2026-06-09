@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBiometric } from '@/hooks/useBiometric';
 import { GoogleIcon } from '@/components/auth/GoogleIcon';
 import { getGoogleOAuthUrl } from '@/lib/auth';
-import { isBiometricEnabled, isPwaInstalled } from '@/lib/biometric';
+import { isBiometricEnabled } from '@/lib/biometric';
 import type { Lang } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +47,7 @@ export default function LoginPage() {
   }, [tr.loginFailed]);
 
   useEffect(() => {
-    setShowBiometric(isPwaInstalled() && isBiometricEnabled());
+    setShowBiometric(isBiometricEnabled());
   }, []);
 
   useEffect(() => {

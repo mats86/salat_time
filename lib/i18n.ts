@@ -86,6 +86,9 @@ export const translations = {
       'Nach dem ersten Login kannst du dich per Fingerabdruck oder Gesicht anmelden, wenn die App installiert ist.',
     biometricPwaOnly: 'Biometrie ist nur in der installierten App verfügbar.',
     biometricNotSupported: 'Biometrie wird auf diesem Gerät nicht unterstützt.',
+    biometricSecureContext: 'Biometrie benötigt eine sichere HTTPS-Verbindung.',
+    biometricNoRefreshToken:
+      'Kein Sitzungstoken verfügbar. Bitte einmal mit E-Mail/Passwort anmelden und erneut versuchen.',
     biometricEnabled: 'Biometrie ist aktiviert',
     biometricFailed: 'Biometrie-Anmeldung fehlgeschlagen. Bitte mit Passwort anmelden.',
     biometricExpired: 'Biometrie-Sitzung abgelaufen. Bitte erneut mit Passwort anmelden.',
@@ -258,6 +261,9 @@ export const translations = {
       'بعد أول تسجيل دخول، يمكنك استخدام بصمة الإصبع أو الوجه عند تثبيت التطبيق.',
     biometricPwaOnly: 'البيومترية متاحة فقط في التطبيق المثبت.',
     biometricNotSupported: 'البيومترية غير مدعومة على هذا الجهاز.',
+    biometricSecureContext: 'البيومترية تتطلب اتصال HTTPS آمنًا.',
+    biometricNoRefreshToken:
+      'لا يوجد رمز جلسة. يرجى تسجيل الدخول بالبريد وكلمة المرور ثم المحاولة مرة أخرى.',
     biometricEnabled: 'البيومترية مفعلة',
     biometricFailed: 'فشل تسجيل الدخول البيومتري. يرجى تسجيل الدخول بكلمة المرور.',
     biometricExpired: 'انتهت جلسة البيومترية. يرجى تسجيل الدخول بكلمة المرور مرة أخرى.',
@@ -430,6 +436,9 @@ export const translations = {
       'After your first login, you can sign in with fingerprint or face when the app is installed.',
     biometricPwaOnly: 'Biometrics are only available in the installed app.',
     biometricNotSupported: 'Biometrics are not supported on this device.',
+    biometricSecureContext: 'Biometrics require a secure HTTPS connection.',
+    biometricNoRefreshToken:
+      'No session token available. Please sign in with email/password once and try again.',
     biometricEnabled: 'Biometrics enabled',
     biometricFailed: 'Biometric login failed. Please sign in with your password.',
     biometricExpired: 'Biometric session expired. Please sign in with your password again.',

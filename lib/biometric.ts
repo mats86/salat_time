@@ -29,15 +29,63 @@ function base64ToBuffer(base64: string): ArrayBuffer {
 
 export function isPwaInstalled(): boolean {
   if (typeof window === 'undefined') return false;
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
+
+  const displayModes = ['standalone', 'fullscreen', 'minimal-ui'];
+  if (displayModes.some((mode) => window.matchMedia(`(display-mode: ${mode})`).matches)) {
+    return true;
+  }
+
+  if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {
+    return true;
+  }
+
+  if (document.referrer.startsWith('android-app://')) {
+    return true;
+  }
+
+  return false;
+}
+
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function getWebAuthnRpId(): string {
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return hostname;
+  const parts = hostname.split('.');
+  if (parts.length >= 3) return parts.slice(-2).join('.');
+  return hostname;
 }
 
 export function isBiometricSupported(): boolean {
   if (typeof window === 'undefined') return false;
-  return isPwaInstalled() && typeof window.PublicKeyCredential !== 'undefined';
+  if (typeof window.PublicKeyCredential === 'undefined') return false;
+  if (!window.isSecureContext) return false;
+  return isPwaInstalled() || isMobileDevice();
+}
+
+export type BiometricSupportReason = 'pwa' | 'webauthn' | 'platform' | 'secure' | null;
+
+export async function checkBiometricSupport(): Promise<{
+  supported: boolean;
+  reason: BiometricSupportReason;
+}> {
+  if (typeof window === 'undefined') {
+    return { supported: false, reason: 'webauthn' };
+  }
+  if (!window.isSecureContext) {
+    return { supported: false, reason: 'secure' };
+  }
+  if (typeof window.PublicKeyCredential === 'undefined') {
+    return { supported: false, reason: 'webauthn' };
+  }
+  if (!isPwaInstalled() && !isMobileDevice()) {
+    return { supported: false, reason: 'pwa' };
+  }
+
+  return { supported: true, reason: null };
 }
 
 export function isBiometricEnabled(): boolean {
@@ -59,7 +107,7 @@ export async function registerBiometric(userId: string, email: string): Promise<
   const credential = await navigator.credentials.create({
     publicKey: {
       challenge,
-      rp: { name: 'Salat Zeit', id: window.location.hostname },
+      rp: { name: 'Salat Zeit', id: getWebAuthnRpId() },
       user: {
         id: new TextEncoder().encode(userId),
         name: email,

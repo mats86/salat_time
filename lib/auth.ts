@@ -181,6 +181,29 @@ export async function logoutSession(): Promise<void> {
   clearSessionAuth();
 }
 
+/** Exchange an OAuth session cookie for JWT tokens (needed for biometric setup). */
+export async function exchangeSessionForTokens(): Promise<{
+  access_token: string;
+  refresh_token: string;
+} | null> {
+  const res = await fetch(`${getDirectusProxyBase()}/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ mode: 'json' }),
+  });
+  if (!res.ok) return null;
+
+  const json = await res.json().catch(() => null);
+  const access = json?.data?.access_token as string | undefined;
+  const refresh = json?.data?.refresh_token as string | undefined;
+  if (!access || !refresh) return null;
+
+  setTokens(access, refresh);
+  clearSessionAuth();
+  return { access_token: access, refresh_token: refresh };
+}
+
 export async function refreshAccessToken(
   source: 'session' | 'biometric' = 'session'
 ): Promise<string | null> {

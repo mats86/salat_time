@@ -10,7 +10,7 @@ import { Spinner } from '@/components/ui/Spinner';
 export function BiometricSettingsCard() {
   const { tr } = useLang();
   const { user } = useAuth();
-  const { supported, enabled, loading, error, enable, disable } = useBiometric(user);
+  const { supported, supportReason, enabled, loading, error, enable, disable } = useBiometric(user);
 
   const handleToggle = async (checked: boolean) => {
     if (checked) {
@@ -20,15 +20,24 @@ export function BiometricSettingsCard() {
     }
   };
 
+  const unsupportedMessage =
+    supportReason === 'webauthn' || supportReason === 'platform'
+      ? tr.biometricNotSupported
+      : supportReason === 'secure'
+        ? tr.biometricSecureContext
+        : tr.biometricPwaOnly;
+
   const statusMessage = !supported
-    ? tr.biometricPwaOnly
-    : error === 'expired'
-      ? tr.biometricExpired
-      : error === 'failed' || error === 'registration_failed'
-        ? tr.biometricFailed
-        : enabled
-          ? tr.biometricEnabled
-          : null;
+    ? unsupportedMessage
+    : error === 'no_refresh_token'
+      ? tr.biometricNoRefreshToken
+      : error === 'expired'
+        ? tr.biometricExpired
+        : error === 'failed' || error === 'registration_failed'
+          ? tr.biometricFailed
+          : enabled
+            ? tr.biometricEnabled
+            : null;
 
   return (
     <Card className="p-6 space-y-4">
@@ -53,13 +62,7 @@ export function BiometricSettingsCard() {
 
       {!supported && (
         <p className="text-xs text-on-surface-variant bg-surface-container-low rounded-lg px-3 py-2">
-          {tr.biometricPwaOnly}
-        </p>
-      )}
-
-      {supported && typeof window !== 'undefined' && !window.PublicKeyCredential && (
-        <p className="text-xs text-on-surface-variant bg-surface-container-low rounded-lg px-3 py-2">
-          {tr.biometricNotSupported}
+          {unsupportedMessage}
         </p>
       )}
 

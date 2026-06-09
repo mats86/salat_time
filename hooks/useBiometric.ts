@@ -2,25 +2,41 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import directus from '@/lib/directus';
-import { getRefreshToken, fetchCurrentUser } from '@/lib/auth';
 import {
-  isBiometricSupported,
+  getRefreshToken,
+  fetchCurrentUser,
+  exchangeSessionForTokens,
+  usesSessionAuth,
+} from '@/lib/auth';
+import {
   isBiometricEnabled,
   enableBiometric,
   disableBiometric,
   authenticateWithBiometric,
+  checkBiometricSupport,
+  type BiometricSupportReason,
 } from '@/lib/biometric';
 import type { DirectusUser } from '@/types';
 
 export function useBiometric(user?: DirectusUser | null) {
   const [supported, setSupported] = useState(false);
+  const [supportReason, setSupportReason] = useState<BiometricSupportReason>(null);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setSupported(isBiometricSupported());
-    setEnabled(isBiometricEnabled());
+    let cancelled = false;
+    (async () => {
+      const result = await checkBiometricSupport();
+      if (cancelled) return;
+      setSupported(result.supported);
+      setSupportReason(result.reason);
+      setEnabled(isBiometricEnabled());
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const enable = useCallback(async () => {
@@ -28,7 +44,11 @@ export function useBiometric(user?: DirectusUser | null) {
     setLoading(true);
     setError(null);
     try {
-      const refresh = getRefreshToken();
+      let refresh = getRefreshToken();
+      if (!refresh && usesSessionAuth()) {
+        const tokens = await exchangeSessionForTokens();
+        refresh = tokens?.refresh_token ?? null;
+      }
       if (!refresh) throw new Error('no_refresh_token');
       await enableBiometric(user, refresh);
       setEnabled(true);
@@ -74,5 +94,5 @@ export function useBiometric(user?: DirectusUser | null) {
     }
   }, []);
 
-  return { supported, enabled, loading, error, enable, disable, loginWithBiometric };
+  return { supported, supportReason, enabled, loading, error, enable, disable, loginWithBiometric };
 }
