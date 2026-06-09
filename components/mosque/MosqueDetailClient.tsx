@@ -20,7 +20,7 @@ import {
   MOSQUE_MOBILE_MAP_PLACEHOLDER,
 } from '@/lib/mosque-images';
 import { cn, formatTime12 } from '@/lib/utils';
-import type { Lang, Mosque, MosqueEvent, MosquePrayerTimes, PrayerName } from '@/types';
+import type { Lang, Mosque, MosqueEvent, MosquePrayerTimes, PrayerName, PrayerTimings } from '@/types';
 
 const PRAYER_ROWS: PrayerName[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
@@ -62,7 +62,7 @@ interface MosqueDetailClientProps {
   events: MosqueEvent[];
 }
 
-function getCurrentPrayer(timings: Record<string, string>): PrayerName | null {
+function getCurrentPrayer(timings: PrayerTimings): PrayerName | null {
   const now = new Date();
   let current: PrayerName | null = null;
   for (const name of PRAYER_ROWS) {
