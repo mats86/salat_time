@@ -7,10 +7,15 @@ import {
   getRefreshToken,
   clearTokens,
   fetchCurrentUser,
+  fetchCurrentUserWithSession,
   refreshAccessToken,
   isStaff,
   isAdmin,
   loginWithEmailPassword,
+  logoutSession,
+  setSessionAuth,
+  clearSessionAuth,
+  usesSessionAuth,
 } from '@/lib/auth';
 import { syncBiometricRefreshToken } from '@/lib/biometric';
 import type { DirectusUser } from '@/types';
@@ -22,10 +27,20 @@ export function useAuth() {
   const loadUser = useCallback(async () => {
     let token = getAccessToken();
     if (!token) {
-      setUser(null);
+      const sessionUser = await fetchCurrentUserWithSession();
+      if (sessionUser) {
+        setSessionAuth(true);
+        setUser(sessionUser);
+      } else if (usesSessionAuth()) {
+        clearSessionAuth();
+        setUser(null);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
       return;
     }
+
     let u = await fetchCurrentUser(token);
     if (!u) {
       const refreshed = await refreshAccessToken();
@@ -35,6 +50,7 @@ export function useAuth() {
       }
     }
     if (token && u) {
+      clearSessionAuth();
       directus.setToken(token);
       const refresh = getRefreshToken();
       if (refresh) syncBiometricRefreshToken(refresh);
@@ -49,6 +65,7 @@ export function useAuth() {
 
   const login = async (email: string, password: string) => {
     const result = await loginWithEmailPassword(email, password);
+    clearSessionAuth();
     localStorage.setItem('dt_access', result.access_token);
     if (result.refresh_token) {
       localStorage.setItem('dt_refresh', result.refresh_token);
@@ -59,12 +76,17 @@ export function useAuth() {
   };
 
   const logout = async () => {
-    try {
-      await directus.logout();
-    } catch {
-      /* ignore */
+    if (usesSessionAuth() || !getAccessToken()) {
+      await logoutSession();
+    } else {
+      try {
+        await directus.logout();
+      } catch {
+        /* ignore */
+      }
     }
     clearTokens();
+    clearSessionAuth();
     setUser(null);
   };
 

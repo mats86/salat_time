@@ -12,6 +12,8 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
   const target = `${origin}/${path.join('/')}${search}`;
 
   const isAuthRoute = path[0] === 'auth';
+  const cookie = request.headers.get('cookie');
+  const hasSessionCookie = cookie?.includes('directus_session_token=') ?? false;
 
   const headers = new Headers();
   const passthrough = ['authorization', 'content-type', 'accept'];
@@ -20,14 +22,13 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
     if (value) headers.set(key, value);
   }
 
-  if (isAuthRoute) {
-    const cookie = request.headers.get('cookie');
-    if (cookie) headers.set('cookie', cookie);
+  if (cookie && (isAuthRoute || hasSessionCookie)) {
+    headers.set('cookie', cookie);
   }
 
   if (
-    !isAuthRoute &&
     !headers.has('authorization') &&
+    !hasSessionCookie &&
     process.env.DIRECTUS_STATIC_TOKEN
   ) {
     headers.set('Authorization', `Bearer ${process.env.DIRECTUS_STATIC_TOKEN}`);

@@ -3,6 +3,7 @@ import type { DirectusUser } from '@/types';
 const ACCESS_KEY = 'dt_access';
 const REFRESH_KEY = 'dt_refresh';
 const BIO_REFRESH_KEY = 'bio_refresh';
+const SESSION_AUTH_KEY = 'dt_session_auth';
 
 function getDirectusProxyBase(): string {
   return '/api/directus';
@@ -45,6 +46,27 @@ export function clearTokens() {
   localStorage.removeItem(REFRESH_KEY);
 }
 
+export function setSessionAuth(enabled: boolean) {
+  if (typeof window === 'undefined') return;
+  if (enabled) {
+    localStorage.setItem(SESSION_AUTH_KEY, '1');
+    document.cookie = 'salat_session_auth=1; Path=/; Max-Age=2592000; SameSite=Lax';
+  } else {
+    localStorage.removeItem(SESSION_AUTH_KEY);
+    document.cookie = 'salat_session_auth=; Path=/; Max-Age=0; SameSite=Lax';
+  }
+}
+
+export function usesSessionAuth(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (localStorage.getItem(SESSION_AUTH_KEY) === '1') return true;
+  return document.cookie.includes('salat_session_auth=1');
+}
+
+export function clearSessionAuth() {
+  setSessionAuth(false);
+}
+
 export function setTokensFromCallback(params: URLSearchParams) {
   const access = params.get('access_token');
   const refresh = params.get('refresh_token');
@@ -57,51 +79,74 @@ function parseTokenParams(params: URLSearchParams): boolean {
   return setTokensFromCallback(params);
 }
 
-/** Exchange Directus session cookie (OAuth default) for JSON access/refresh tokens. */
-export async function exchangeOAuthSessionForTokens(): Promise<{
-  access_token: string;
-  refresh_token?: string;
-} | null> {
-  const res = await fetch('/api/auth/oauth-session', {
-    method: 'POST',
-    credentials: 'include',
-  });
-  if (!res.ok) return null;
-  const json = await res.json().catch(() => null);
-  const access = json?.access_token as string | undefined;
-  if (!access) return null;
-  return {
-    access_token: access,
-    refresh_token: json?.refresh_token as string | undefined,
-  };
+/** Validate Directus session cookie (OAuth default) and return the authenticated user. */
+export async function establishOAuthSession(): Promise<{ user: DirectusUser } | null> {
+  const directusUrl = getDirectusPublicBase();
+
+  try {
+    await fetch(`${directusUrl}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mode: 'session' }),
+    });
+  } catch {
+    /* CORS/network - continue with server-side verification */
+  }
+
+  for (const url of ['/auth/oauth-session', '/api/auth/oauth-session']) {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) continue;
+
+    const json = await res.json().catch(() => null);
+    const user = json?.user as DirectusUser | undefined;
+    if (user) {
+      setSessionAuth(true);
+      return { user };
+    }
+  }
+
+  const user = await fetchCurrentUserWithSession();
+  if (user) {
+    setSessionAuth(true);
+    return { user };
+  }
+
+  return null;
 }
 
-/** Resolve tokens from OAuth redirect: query params, hash fragment, or session cookie. */
+/** Resolve auth from OAuth redirect: query params, hash fragment, or session cookie. */
 export async function completeOAuthCallback(
   searchParams: URLSearchParams
-): Promise<boolean> {
-  if (parseTokenParams(searchParams)) return true;
+): Promise<{ ok: boolean; user?: DirectusUser }> {
+  if (parseTokenParams(searchParams)) return { ok: true };
 
   if (typeof window !== 'undefined' && window.location.hash.length > 1) {
     const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    if (parseTokenParams(hashParams)) return true;
+    if (parseTokenParams(hashParams)) return { ok: true };
   }
 
-  const sessionTokens = await exchangeOAuthSessionForTokens();
-  if (sessionTokens) {
-    setTokens(sessionTokens.access_token, sessionTokens.refresh_token ?? '');
-    return true;
-  }
+  const session = await establishOAuthSession();
+  if (session) return { ok: true, user: session.user };
 
-  return false;
+  return { ok: false };
 }
 
 export async function getPostLoginPath(
-  accessToken: string,
+  accessTokenOrUser: string | DirectusUser | null,
   redirectParam?: string | null
 ): Promise<string> {
   if (redirectParam) return redirectParam;
-  const u = await fetchCurrentUser(accessToken);
+  const u =
+    typeof accessTokenOrUser === 'string'
+      ? await fetchCurrentUser(accessTokenOrUser)
+      : accessTokenOrUser;
   if (u && isAdmin(u)) return '/admin';
   if (u && isStaff(u)) return '/staff';
   return '/staff';
@@ -134,6 +179,23 @@ export async function fetchCurrentUser(accessToken: string): Promise<DirectusUse
   if (!res.ok) return null;
   const json = await res.json();
   return json.data ?? null;
+}
+
+export async function fetchCurrentUserWithSession(): Promise<DirectusUser | null> {
+  const res = await fetch(`${getDirectusProxyBase()}/users/me?fields=*,role.*`, {
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.data ?? null;
+}
+
+export async function logoutSession(): Promise<void> {
+  await fetch(`${getDirectusProxyBase()}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  }).catch(() => undefined);
+  clearSessionAuth();
 }
 
 export async function refreshAccessToken(
@@ -173,7 +235,7 @@ export function getOAuthCallbackUrl(): string {
     (typeof window !== 'undefined'
       ? process.env.NEXT_PUBLIC_APP_URL || window.location.origin
       : process.env.NEXT_PUBLIC_APP_URL) ?? 'http://localhost:3000';
-  return `${base.replace(/\/$/, '')}/auth/callback`;
+  return `${base.replace(/\/$/, '')}/auth/callback/exchange`;
 }
 
 export function getGoogleOAuthUrl(redirectUrl?: string): string {
