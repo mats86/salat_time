@@ -1,4 +1,7 @@
 import type { DirectusUser } from '@/types';
+import { isAdmin, isStaff } from '@/lib/user-roles';
+
+export { isStaff, isAdmin } from '@/lib/user-roles';
 
 const ACCESS_KEY = 'dt_access';
 const REFRESH_KEY = 'dt_refresh';
@@ -152,26 +155,6 @@ export async function getPostLoginPath(
   return '/staff';
 }
 
-export function isStaff(user: DirectusUser | null): boolean {
-  if (!user?.role) return false;
-  const name = user.role.name?.toLowerCase() ?? '';
-  return (
-    name.includes('staff') ||
-    name.includes('moschee') ||
-    name.includes('imam') ||
-    name.includes('manager')
-  );
-}
-
-export function isAdmin(user: DirectusUser | null): boolean {
-  const name = user?.role?.name?.toLowerCase() ?? '';
-  return Boolean(
-    user?.role?.admin_access ||
-      name.includes('admin') ||
-      name.includes('administrator')
-  );
-}
-
 export async function fetchCurrentUser(accessToken: string): Promise<DirectusUser | null> {
   const res = await fetch(`${getDirectusProxyBase()}/users/me?fields=*,role.*`, {
     headers: { Authorization: `Bearer ${accessToken}` },
@@ -230,36 +213,12 @@ export async function refreshAccessToken(
   return null;
 }
 
-function isLocalDevOrigin(origin: string): boolean {
-  try {
-    const host = new URL(origin).hostname;
-    return host === 'localhost' || host === '127.0.0.1';
-  } catch {
-    return false;
-  }
-}
-
-function getProductionAppUrl(): string {
-  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (envUrl && !isLocalDevOrigin(envUrl)) {
-    return envUrl.replace(/\/$/, '');
-  }
-  return 'https://salat-time.alattas.de';
-}
-
 export function getOAuthCallbackUrl(): string {
-  const origin =
-    typeof window !== 'undefined'
+  const base =
+    (typeof window !== 'undefined'
       ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-
-  if (isLocalDevOrigin(origin)) {
-    const productionBase = getProductionAppUrl();
-    const relay = encodeURIComponent(origin.replace(/\/$/, ''));
-    return `${productionBase}/auth/callback/exchange?relay=${relay}`;
-  }
-
-  return `${origin.replace(/\/$/, '')}/auth/callback/exchange`;
+      : process.env.NEXT_PUBLIC_APP_URL) ?? 'https://salat-time.alattas.de';
+  return `${base.replace(/\/$/, '')}/auth/callback/exchange`;
 }
 
 export function getGoogleOAuthUrl(redirectUrl?: string): string {

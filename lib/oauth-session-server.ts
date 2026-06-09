@@ -28,32 +28,25 @@ export async function fetchDirectusUserWithSession(
   sessionToken: string
 ): Promise<DirectusUser | null> {
   const origin = getDirectusOrigin();
+  const cookieHeader = `directus_session_token=${sessionToken}`;
+
+  await fetch(`${origin}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Cookie: cookieHeader,
+    },
+    body: JSON.stringify({ mode: 'session' }),
+    cache: 'no-store',
+  }).catch(() => null);
+
   const res = await fetch(`${origin}/users/me?fields=*,role.*`, {
-    headers: { Cookie: `directus_session_token=${sessionToken}` },
+    headers: { Cookie: cookieHeader },
     cache: 'no-store',
   });
   if (!res.ok) return null;
   const json = await res.json().catch(() => null);
   return (json?.data as DirectusUser | undefined) ?? null;
-}
-
-export function isLocalDevHostname(hostname: string): boolean {
-  return hostname === 'localhost' || hostname === '127.0.0.1';
-}
-
-export function isAllowedDevRelayOrigin(relay: string): boolean {
-  try {
-    const url = new URL(relay);
-    return url.protocol === 'http:' && isLocalDevHostname(url.hostname);
-  } catch {
-    return false;
-  }
-}
-
-export function buildDevRelayAcceptUrl(relayOrigin: string, sessionToken: string): URL {
-  const acceptUrl = new URL('/auth/callback/accept', relayOrigin);
-  acceptUrl.searchParams.set('session_token', sessionToken);
-  return acceptUrl;
 }
 
 export async function verifyOAuthSession(request: NextRequest) {
