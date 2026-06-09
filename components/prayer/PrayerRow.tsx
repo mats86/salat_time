@@ -1,5 +1,7 @@
 'use client';
 
+import { useLang } from '@/components/providers/LangProvider';
+import { getPrayerLabel } from '@/lib/i18n';
 import { formatTime12 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { MergedPrayerTime } from '@/types';
@@ -14,6 +16,9 @@ const PRAYER_ICONS: Record<string, string> = {
 };
 
 export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
+  const { lang, tr } = useLang();
+  const label = getPrayerLabel(lang, prayer.name);
+
   if (prayer.isCurrent) {
     return (
       <div className="flex justify-between items-center px-4 py-4 bg-primary-container/30 rounded-xl border border-secondary/50 relative overflow-hidden">
@@ -21,11 +26,11 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
           <span className="material-symbols-outlined text-secondary material-symbols-filled">
             {PRAYER_ICONS[prayer.name]}
           </span>
-          <span className="font-title-md text-title-md text-secondary">{prayer.name}</span>
+          <span className="font-title-md text-title-md text-secondary">{label}</span>
         </div>
         <div className="flex items-center gap-4 relative z-10">
           <span className="font-label-caps text-label-caps text-secondary-fixed bg-secondary-container/20 px-2 py-0.5 rounded">
-            CURRENT
+            {tr.current}
           </span>
           <span className="font-title-md text-title-md text-secondary">
             {formatTime12(prayer.time)}
@@ -51,7 +56,7 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
         <span className="material-symbols-outlined text-on-surface-variant">
           {PRAYER_ICONS[prayer.name]}
         </span>
-        <span className="font-title-md text-title-md text-on-surface">{prayer.name}</span>
+        <span className="font-title-md text-title-md text-on-surface">{label}</span>
       </div>
       <span className="font-title-md text-title-md text-on-surface">
         {formatTime12(prayer.time)}

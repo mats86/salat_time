@@ -6,14 +6,13 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { PrayerTimeHero } from '@/components/prayer/PrayerTimeHero';
 import { PrayerGrid } from '@/components/prayer/PrayerGrid';
 import { MosqueCard } from '@/components/mosque/MosqueCard';
-import { MosqueSheet } from '@/components/mosque/MosqueSheet';
 import { LocationSheet } from '@/components/location/LocationSheet';
 import { Spinner } from '@/components/ui/Spinner';
 import { useLang } from '@/components/providers/LangProvider';
+import { getLocationErrorMessage } from '@/lib/i18n';
 import { useLocation } from '@/hooks/useLocation';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useNearbyMosques } from '@/hooks/useNearbyMosques';
-import type { Mosque } from '@/types';
 
 export default function HomePage() {
   const { tr } = useLang();
@@ -31,7 +30,6 @@ export default function HomePage() {
     coords?.lng
   );
   const { mosques, loading: mosquesLoading } = useNearbyMosques(coords?.lat, coords?.lng);
-  const [selectedMosque, setSelectedMosque] = useState<Mosque | null>(null);
   const [locationOpen, setLocationOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -57,8 +55,10 @@ export default function HomePage() {
   }, [mosques.length]);
 
   const hijriLabel = hijri
-    ? `${hijri.day} ${hijri.month} ${hijri.year} AH`
-    : '14 Ramadān 1445 AH';
+    ? `${hijri.day} ${hijri.month} ${hijri.year} ${tr.hijriSuffix}`
+    : `14 Ramadān 1445 ${tr.hijriSuffix}`;
+
+  const locationError = getLocationErrorMessage(tr, locError);
 
   const locationStatus =
     source === 'gps'
@@ -80,7 +80,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => setLocationOpen(true)}
-            className="space-y-1 text-left flex-1 min-w-0 group"
+            className="space-y-1 text-start flex-1 min-w-0 group"
           >
             <p className="font-label-caps text-label-caps text-tertiary">{hijriLabel}</p>
             <h2 className="font-title-md text-title-md text-on-surface truncate group-hover:text-secondary transition-colors">
@@ -100,9 +100,9 @@ export default function HomePage() {
           </button>
         </section>
 
-        {locError && !locLoading && (
+        {locationError && !locLoading && (
           <p className="font-body-sm text-body-sm text-error bg-error/10 border border-error/20 rounded-xl px-4 py-3">
-            {locError}
+            {locationError}
           </p>
         )}
 
@@ -126,10 +126,10 @@ export default function HomePage() {
         <section id="mosques" className="space-y-stack-md">
           <div className="flex justify-between items-center px-1">
             <h3 className="font-label-caps text-label-caps text-on-surface-variant">
-              Mosques Near You
+              {tr.mosquesNearYou}
             </h3>
             <button type="button" className="text-primary font-body-sm text-body-sm">
-              View All
+              {tr.viewAll}
             </button>
           </div>
           {mosquesLoading ? (
@@ -138,7 +138,7 @@ export default function HomePage() {
             </div>
           ) : mosques.length === 0 ? (
             <p className="font-body-sm text-body-sm text-on-surface-variant text-center py-8">
-              No mosques found nearby
+              {tr.noMosques}
             </p>
           ) : (
             <div
@@ -151,7 +151,6 @@ export default function HomePage() {
                   mosque={m}
                   showJummah={i === 0}
                   jamaahTime={i === 0 ? '16:00' : '16:15'}
-                  onSelect={setSelectedMosque}
                 />
               ))}
             </div>
@@ -167,7 +166,6 @@ export default function HomePage() {
         loadingGps={locLoading}
         currentLabel={coords?.label}
       />
-      <MosqueSheet mosque={selectedMosque} onClose={() => setSelectedMosque(null)} />
       <BottomNav />
     </div>
   );

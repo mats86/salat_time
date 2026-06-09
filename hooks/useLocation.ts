@@ -56,7 +56,7 @@ export function useLocation() {
     setPermissionDenied(false);
 
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported in this browser.');
+      setError('geolocation_unsupported');
       setLoading(false);
       return;
     }
@@ -81,11 +81,11 @@ export function useLocation() {
         setLoading(false);
         if (err.code === err.PERMISSION_DENIED) {
           setPermissionDenied(true);
-          setError('Location access denied. Please allow location in browser settings or enter a city manually.');
+          setError('permission_denied');
         } else if (err.code === err.TIMEOUT) {
-          setError('Location request timed out. Try again or enter a city manually.');
+          setError('timeout');
         } else {
-          setError('Could not detect location. Enter a city manually.');
+          setError('detect_failed');
         }
         const cached = loadCached();
         if (cached) setCoords({ ...cached, source: 'cached' });

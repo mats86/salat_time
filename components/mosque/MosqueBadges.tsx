@@ -19,7 +19,7 @@ export function MosqueBadges({ mosque }: { mosque: Mosque }) {
     <div className="flex flex-wrap gap-2">
       {badges.map((b) => (
         <Badge key={b.label}>
-          <span className="material-symbols-outlined text-xs align-middle mr-1">{b.icon}</span>
+          <span className="material-symbols-outlined text-xs align-middle me-1">{b.icon}</span>
           {b.label}
         </Badge>
       ))}

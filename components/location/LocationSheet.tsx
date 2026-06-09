@@ -116,11 +116,11 @@ export function LocationSheet({
                     onClose();
                   }}
                   className={cn(
-                    'w-full text-left px-4 py-3 rounded-xl font-body-sm text-body-sm',
+                    'w-full text-start px-4 py-3 rounded-xl font-body-sm text-body-sm',
                     'text-on-surface hover:bg-surface-container-high transition'
                   )}
                 >
-                  <span className="material-symbols-outlined text-sm align-middle mr-2 text-tertiary">
+                  <span className="material-symbols-outlined text-sm align-middle me-2 text-tertiary">
                     location_on
                   </span>
                   {place.label}

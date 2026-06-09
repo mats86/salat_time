@@ -29,7 +29,7 @@ export function usePrayerTimes(lat?: number, lng?: number) {
       setNextPrayer(next);
       setError(null);
     } catch {
-      setError('Failed to load prayer times');
+      setError('failed_prayer_times');
     } finally {
       setLoading(false);
     }
