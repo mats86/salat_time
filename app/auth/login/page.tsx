@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLang } from '@/components/providers/LangProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { GoogleIcon } from '@/components/auth/GoogleIcon';
+import { getGoogleOAuthUrl } from '@/lib/auth';
 import type { Lang } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -34,6 +36,13 @@ export default function LoginPage() {
   const brandName = lang === 'ar' ? tr.appNameAr : tr.appName;
 
   useEffect(() => {
+    const oauthError = new URLSearchParams(window.location.search).get('error');
+    if (oauthError === 'oauth') {
+      setError(tr.loginFailed);
+    }
+  }, [tr.loginFailed]);
+
+  useEffect(() => {
     const handleMove = (e: MouseEvent) => {
       const isDesktop = window.matchMedia('(min-width: 768px)').matches;
 
@@ -58,6 +67,11 @@ export default function LoginPage() {
     window.addEventListener('mousemove', handleMove);
     return () => window.removeEventListener('mousemove', handleMove);
   }, []);
+
+  const handleGoogleLogin = () => {
+    const callbackUrl = `${window.location.origin}/auth/callback`;
+    window.location.href = getGoogleOAuthUrl(callbackUrl);
+  };
 
   const cycleLanguage = () => {
     const idx = LANGS.findIndex((l) => l.code === lang);
@@ -229,6 +243,15 @@ export default function LoginPage() {
             <span className="font-label-caps text-[10px] text-on-surface-variant/50">{tr.loginOrSecure}</span>
             <div className="h-px bg-outline-variant/30 flex-grow" />
           </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            className="mt-stack-md w-full h-14 login-glass-mobile rounded-xl flex items-center justify-center gap-3 text-on-surface hover:text-on-surface transition-all border border-outline-variant/20 hover:border-secondary/40 active:scale-[0.98]"
+          >
+            <GoogleIcon className="w-5 h-5 shrink-0" />
+            <span className="font-title-md text-title-md">{tr.loginWithGoogle}</span>
+          </button>
 
           <div className="flex gap-4 mt-stack-md w-full">
             <button
@@ -444,6 +467,23 @@ export default function LoginPage() {
                     </span>
                   </button>
                 </div>
+
+                <div className="flex items-center gap-4 pt-4">
+                  <div className="h-px bg-outline-variant/30 flex-grow" />
+                  <span className="font-label-caps text-[10px] text-on-surface-variant/50">
+                    {tr.loginOrSecure}
+                  </span>
+                  <div className="h-px bg-outline-variant/30 flex-grow" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full py-4 rounded-lg flex items-center justify-center gap-3 border border-outline-variant/30 bg-surface/20 hover:border-secondary/40 hover:bg-surface/40 transition-all active:scale-[0.98]"
+                >
+                  <GoogleIcon className="w-5 h-5 shrink-0" />
+                  <span className="font-title-md text-title-md text-on-surface">{tr.loginWithGoogle}</span>
+                </button>
               </form>
 
               <div className="mt-stack-lg pt-8 border-t border-outline-variant/10 flex flex-col items-center gap-4 text-center">
