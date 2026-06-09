@@ -254,10 +254,14 @@ export async function loginWithEmailPassword(email: string, password: string): P
   access_token: string;
   refresh_token?: string;
 }> {
+  await logoutSession().catch(() => undefined);
+  clearSessionAuth();
+
   const res = await fetch(`${getDirectusProxyBase()}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    credentials: 'omit',
+    body: JSON.stringify({ email, password, mode: 'json' }),
   });
 
   const json = await res.json().catch(() => ({}));
