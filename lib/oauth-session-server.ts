@@ -37,6 +37,25 @@ export async function fetchDirectusUserWithSession(
   return (json?.data as DirectusUser | undefined) ?? null;
 }
 
+export function isLocalDevHostname(hostname: string): boolean {
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+export function isAllowedDevRelayOrigin(relay: string): boolean {
+  try {
+    const url = new URL(relay);
+    return url.protocol === 'http:' && isLocalDevHostname(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+export function buildDevRelayAcceptUrl(relayOrigin: string, sessionToken: string): URL {
+  const acceptUrl = new URL('/auth/callback/accept', relayOrigin);
+  acceptUrl.searchParams.set('session_token', sessionToken);
+  return acceptUrl;
+}
+
 export async function verifyOAuthSession(request: NextRequest) {
   const sessionToken = getDirectusSessionToken(request);
   if (!sessionToken) {

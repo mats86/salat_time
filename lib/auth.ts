@@ -230,12 +230,36 @@ export async function refreshAccessToken(
   return null;
 }
 
+function isLocalDevOrigin(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    return host === 'localhost' || host === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+function getProductionAppUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl && !isLocalDevOrigin(envUrl)) {
+    return envUrl.replace(/\/$/, '');
+  }
+  return 'https://salat-time.alattas.de';
+}
+
 export function getOAuthCallbackUrl(): string {
-  const base =
-    (typeof window !== 'undefined'
-      ? process.env.NEXT_PUBLIC_APP_URL || window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL) ?? 'http://localhost:3000';
-  return `${base.replace(/\/$/, '')}/auth/callback/exchange`;
+  const origin =
+    typeof window !== 'undefined'
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+
+  if (isLocalDevOrigin(origin)) {
+    const productionBase = getProductionAppUrl();
+    const relay = encodeURIComponent(origin.replace(/\/$/, ''));
+    return `${productionBase}/auth/callback/exchange?relay=${relay}`;
+  }
+
+  return `${origin.replace(/\/$/, '')}/auth/callback/exchange`;
 }
 
 export function getGoogleOAuthUrl(redirectUrl?: string): string {
