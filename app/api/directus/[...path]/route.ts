@@ -11,6 +11,8 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
   const search = request.nextUrl.search || '';
   const target = `${origin}/${path.join('/')}${search}`;
 
+  const isAuthRoute = path[0] === 'auth';
+
   const headers = new Headers();
   const passthrough = ['authorization', 'content-type', 'accept'];
   for (const key of passthrough) {
@@ -18,7 +20,16 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
     if (value) headers.set(key, value);
   }
 
-  if (!headers.has('authorization') && process.env.DIRECTUS_STATIC_TOKEN) {
+  if (isAuthRoute) {
+    const cookie = request.headers.get('cookie');
+    if (cookie) headers.set('cookie', cookie);
+  }
+
+  if (
+    !isAuthRoute &&
+    !headers.has('authorization') &&
+    process.env.DIRECTUS_STATIC_TOKEN
+  ) {
     headers.set('Authorization', `Bearer ${process.env.DIRECTUS_STATIC_TOKEN}`);
   }
 

@@ -48,11 +48,63 @@ export function clearTokens() {
 export function setTokensFromCallback(params: URLSearchParams) {
   const access = params.get('access_token');
   const refresh = params.get('refresh_token');
-  if (access && refresh) {
-    setTokens(access, refresh);
+  if (!access) return false;
+  setTokens(access, refresh ?? '');
+  return true;
+}
+
+function parseTokenParams(params: URLSearchParams): boolean {
+  return setTokensFromCallback(params);
+}
+
+/** Exchange Directus session cookie (OAuth default) for JSON access/refresh tokens. */
+export async function exchangeOAuthSessionForTokens(): Promise<{
+  access_token: string;
+  refresh_token?: string;
+} | null> {
+  const res = await fetch('/api/auth/oauth-session', {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) return null;
+  const json = await res.json().catch(() => null);
+  const access = json?.access_token as string | undefined;
+  if (!access) return null;
+  return {
+    access_token: access,
+    refresh_token: json?.refresh_token as string | undefined,
+  };
+}
+
+/** Resolve tokens from OAuth redirect: query params, hash fragment, or session cookie. */
+export async function completeOAuthCallback(
+  searchParams: URLSearchParams
+): Promise<boolean> {
+  if (parseTokenParams(searchParams)) return true;
+
+  if (typeof window !== 'undefined' && window.location.hash.length > 1) {
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    if (parseTokenParams(hashParams)) return true;
+  }
+
+  const sessionTokens = await exchangeOAuthSessionForTokens();
+  if (sessionTokens) {
+    setTokens(sessionTokens.access_token, sessionTokens.refresh_token ?? '');
     return true;
   }
+
   return false;
+}
+
+export async function getPostLoginPath(
+  accessToken: string,
+  redirectParam?: string | null
+): Promise<string> {
+  if (redirectParam) return redirectParam;
+  const u = await fetchCurrentUser(accessToken);
+  if (u && isAdmin(u)) return '/admin';
+  if (u && isStaff(u)) return '/staff';
+  return '/staff';
 }
 
 export function isStaff(user: DirectusUser | null): boolean {
