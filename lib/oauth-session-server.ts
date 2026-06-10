@@ -49,6 +49,33 @@ export async function fetchDirectusUserWithSession(
   return (json?.data as DirectusUser | undefined) ?? null;
 }
 
+export async function exchangeDirectusSessionForTokens(
+  sessionToken: string
+): Promise<{ access_token: string; refresh_token: string } | null> {
+  const origin = getDirectusOrigin();
+  const cookieHeader = `directus_session_token=${sessionToken}`;
+
+  const res = await fetch(`${origin}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Cookie: cookieHeader,
+    },
+    body: JSON.stringify({ mode: 'json' }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) return null;
+
+  const json = await res.json().catch(() => null);
+  const access = json?.data?.access_token as string | undefined;
+  const refresh = json?.data?.refresh_token as string | undefined;
+  if (!access || !refresh) return null;
+
+  return { access_token: access, refresh_token: refresh };
+}
+
 export async function verifyOAuthSession(request: NextRequest) {
   const sessionToken = getDirectusSessionToken(request);
   if (!sessionToken) {

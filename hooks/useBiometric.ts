@@ -6,7 +6,6 @@ import {
   getRefreshToken,
   fetchCurrentUser,
   exchangeSessionForTokens,
-  usesSessionAuth,
 } from '@/lib/auth';
 import {
   isBiometricEnabled,
@@ -45,9 +44,10 @@ export function useBiometric(user?: DirectusUser | null) {
     setError(null);
     try {
       let refresh = getRefreshToken();
-      if (!refresh && usesSessionAuth()) {
+      if (!refresh) {
         const tokens = await exchangeSessionForTokens();
         refresh = tokens?.refresh_token ?? null;
+        if (tokens?.access_token) directus.setToken(tokens.access_token);
       }
       if (!refresh) throw new Error('no_refresh_token');
       await enableBiometric(user, refresh);

@@ -191,17 +191,15 @@ export async function exchangeSessionForTokens(): Promise<{
   access_token: string;
   refresh_token: string;
 } | null> {
-  const res = await fetch(`${getDirectusProxyBase()}/auth/refresh`, {
+  const res = await fetch('/api/auth/exchange-tokens', {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ mode: 'json' }),
   });
   if (!res.ok) return null;
 
   const json = await res.json().catch(() => null);
-  const access = json?.data?.access_token as string | undefined;
-  const refresh = json?.data?.refresh_token as string | undefined;
+  const access = json?.access_token as string | undefined;
+  const refresh = json?.refresh_token as string | undefined;
   if (!access || !refresh) return null;
 
   setTokens(access, refresh);
