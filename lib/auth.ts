@@ -16,22 +16,26 @@ function getDirectusPublicBase(): string {
   return process.env.NEXT_PUBLIC_DIRECTUS_URL ?? 'https://directus.alattas.de';
 }
 
-export function getAccessToken(): string | null {
+function readStoredToken(key: string): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(ACCESS_KEY);
+  const token = localStorage.getItem(key);
+  return token && token.length > 0 ? token : null;
+}
+
+export function getAccessToken(): string | null {
+  return readStoredToken(ACCESS_KEY);
 }
 
 export function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(REFRESH_KEY);
+  return readStoredToken(REFRESH_KEY);
 }
 
 export function getBiometricRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem(BIO_REFRESH_KEY);
+  return readStoredToken(BIO_REFRESH_KEY);
 }
 
 export function setBiometricRefreshToken(refresh: string) {
+  if (!refresh) return;
   localStorage.setItem(BIO_REFRESH_KEY, refresh);
 }
 
@@ -39,9 +43,10 @@ export function clearBiometricRefreshToken() {
   localStorage.removeItem(BIO_REFRESH_KEY);
 }
 
-export function setTokens(access: string, refresh: string) {
+export function setTokens(access: string, refresh?: string | null) {
   localStorage.setItem(ACCESS_KEY, access);
-  localStorage.setItem(REFRESH_KEY, refresh);
+  if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
+  else localStorage.removeItem(REFRESH_KEY);
 }
 
 export function clearTokens() {
@@ -212,8 +217,9 @@ export async function refreshAccessToken(
   if (!refresh) return null;
   const res = await fetch(`${getDirectusProxyBase()}/auth/refresh`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refresh_token: refresh }),
+    credentials: 'omit',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ mode: 'json', refresh_token: refresh }),
   });
   if (!res.ok) {
     if (source === 'biometric') {

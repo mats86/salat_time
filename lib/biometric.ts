@@ -1,5 +1,6 @@
 import {
   getRefreshToken,
+  getBiometricRefreshToken,
   refreshAccessToken,
   setBiometricRefreshToken,
   clearBiometricRefreshToken,
@@ -183,9 +184,21 @@ async function requestBiometricAssertion(credId: string, rpId: string): Promise<
   });
 }
 
-export async function authenticateWithBiometric(): Promise<string | null> {
+export type BiometricAuthError = 'no_credential' | 'webauthn_failed' | 'no_bio_refresh' | 'token_expired';
+
+export type BiometricAuthResult =
+  | { ok: true; access: string }
+  | { ok: false; error: BiometricAuthError };
+
+export async function authenticateWithBiometric(): Promise<BiometricAuthResult> {
   const credId = localStorage.getItem(BIO_CREDENTIAL_KEY);
-  if (!credId || !isBiometricEnabled()) return null;
+  if (!credId || !isBiometricEnabled()) {
+    return { ok: false, error: 'no_credential' };
+  }
+
+  if (!getBiometricRefreshToken()) {
+    return { ok: false, error: 'no_bio_refresh' };
+  }
 
   let assertion: Credential | null = null;
   const rpIds = getRpIdCandidates();
@@ -199,14 +212,15 @@ export async function authenticateWithBiometric(): Promise<string | null> {
     }
   }
 
-  if (!assertion) return null;
+  if (!assertion) {
+    return { ok: false, error: 'webauthn_failed' };
+  }
 
   const access = await refreshAccessToken('biometric');
   if (!access) {
-    clearBiometricData();
-    return null;
+    return { ok: false, error: 'token_expired' };
   }
-  return access;
+  return { ok: true, access };
 }
 
 export function syncBiometricRefreshToken(refreshToken: string): void {

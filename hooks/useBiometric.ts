@@ -78,13 +78,17 @@ export function useBiometric(user?: DirectusUser | null) {
     setLoading(true);
     setError(null);
     try {
-      const access = await authenticateWithBiometric();
-      if (!access) {
-        setError('expired');
-        return { user: null, error: 'expired' };
+      const result = await authenticateWithBiometric();
+      if (!result.ok) {
+        const err =
+          result.error === 'token_expired' || result.error === 'no_bio_refresh'
+            ? 'expired'
+            : 'failed';
+        setError(err);
+        return { user: null, error: err };
       }
-      directus.setToken(access);
-      const u = await fetchCurrentUser(access);
+      directus.setToken(result.access);
+      const u = await fetchCurrentUser(result.access);
       return { user: u };
     } catch {
       setError('failed');

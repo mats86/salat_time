@@ -13,6 +13,7 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
 
   const isAuthRoute = path[0] === 'auth';
   const isCredentialLogin = isAuthRoute && path[1] === 'login' && method === 'POST';
+  const isTokenRefresh = isAuthRoute && path[1] === 'refresh' && method === 'POST';
   const cookie = request.headers.get('cookie');
   const hasSessionCookie = cookie?.includes('directus_session_token=') ?? false;
 
@@ -23,7 +24,7 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
     if (value) headers.set(key, value);
   }
 
-  if (cookie && isAuthRoute && !isCredentialLogin) {
+  if (cookie && isAuthRoute && !isCredentialLogin && !isTokenRefresh) {
     headers.set('cookie', cookie);
   } else if (cookie && hasSessionCookie && !isAuthRoute) {
     headers.set('cookie', cookie);
