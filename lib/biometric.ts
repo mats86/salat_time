@@ -8,6 +8,7 @@ import type { DirectusUser } from '@/types';
 
 const BIO_ENABLED_KEY = 'bio_enabled';
 const BIO_CREDENTIAL_KEY = 'bio_credential_id';
+const BIO_RP_ID_KEY = 'bio_rp_id';
 
 function bufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -15,11 +16,13 @@ function bufferToBase64(buffer: ArrayBuffer): string {
   for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
 }
 
 function base64ToBuffer(base64: string): ArrayBuffer {
-  const binary = atob(base64);
+  const normalized = base64.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i);
@@ -52,11 +55,26 @@ function isMobileDevice(): boolean {
 }
 
 function getWebAuthnRpId(): string {
+  return window.location.hostname;
+}
+
+function getStoredRpId(): string | null {
+  return localStorage.getItem(BIO_RP_ID_KEY);
+}
+
+function getRpIdCandidates(): string[] {
   const hostname = window.location.hostname;
-  if (hostname === 'localhost' || hostname === '127.0.0.1') return hostname;
+  const stored = getStoredRpId();
+  const candidates: string[] = [];
+  if (stored) candidates.push(stored);
+
   const parts = hostname.split('.');
-  if (parts.length >= 3) return parts.slice(-2).join('.');
-  return hostname;
+  if (parts.length >= 3) {
+    candidates.push(parts.slice(-2).join('.'));
+  }
+  candidates.push(hostname);
+
+  return Array.from(new Set(candidates));
 }
 
 export function isBiometricSupported(): boolean {
@@ -99,15 +117,17 @@ export function isBiometricEnabled(): boolean {
 export function clearBiometricData(): void {
   localStorage.removeItem(BIO_ENABLED_KEY);
   localStorage.removeItem(BIO_CREDENTIAL_KEY);
+  localStorage.removeItem(BIO_RP_ID_KEY);
   clearBiometricRefreshToken();
 }
 
 export async function registerBiometric(userId: string, email: string): Promise<void> {
+  const rpId = getWebAuthnRpId();
   const challenge = crypto.getRandomValues(new Uint8Array(32));
   const credential = await navigator.credentials.create({
     publicKey: {
       challenge,
-      rp: { name: 'Salat Zeit', id: getWebAuthnRpId() },
+      rp: { name: 'Salat Zeit', id: rpId },
       user: {
         id: new TextEncoder().encode(userId),
         name: email,
@@ -117,6 +137,7 @@ export async function registerBiometric(userId: string, email: string): Promise<
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         userVerification: 'required',
+        residentKey: 'discouraged',
       },
       timeout: 60000,
     },
@@ -127,6 +148,7 @@ export async function registerBiometric(userId: string, email: string): Promise<
   const publicKeyCredential = credential as PublicKeyCredential;
   const credId = bufferToBase64(publicKeyCredential.rawId);
   localStorage.setItem(BIO_CREDENTIAL_KEY, credId);
+  localStorage.setItem(BIO_RP_ID_KEY, rpId);
   localStorage.setItem(BIO_ENABLED_KEY, 'true');
 }
 
@@ -142,24 +164,40 @@ export function disableBiometric(): void {
   clearBiometricData();
 }
 
-export async function authenticateWithBiometric(): Promise<string | null> {
-  const credId = localStorage.getItem(BIO_CREDENTIAL_KEY);
-  if (!credId || !isBiometricEnabled()) return null;
-
+async function requestBiometricAssertion(credId: string, rpId: string): Promise<Credential | null> {
   const challenge = crypto.getRandomValues(new Uint8Array(32));
-  const assertion = await navigator.credentials.get({
+  return navigator.credentials.get({
     publicKey: {
       challenge,
+      rpId,
       allowCredentials: [
         {
           id: base64ToBuffer(credId),
           type: 'public-key',
+          transports: ['internal'],
         },
       ],
       userVerification: 'required',
       timeout: 60000,
     },
   });
+}
+
+export async function authenticateWithBiometric(): Promise<string | null> {
+  const credId = localStorage.getItem(BIO_CREDENTIAL_KEY);
+  if (!credId || !isBiometricEnabled()) return null;
+
+  let assertion: Credential | null = null;
+  const rpIds = getRpIdCandidates();
+
+  for (const rpId of rpIds) {
+    try {
+      assertion = await requestBiometricAssertion(credId, rpId);
+      if (assertion) break;
+    } catch {
+      /* try next rpId */
+    }
+  }
 
   if (!assertion) return null;
 
