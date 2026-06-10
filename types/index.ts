@@ -104,6 +104,7 @@ export interface MagicLoginLink {
   id: string;
   user: string | DirectusUser;
   email: string;
+  url?: string | null;
   token_hash?: string;
   expires_at: string;
   used_at?: string | null;
