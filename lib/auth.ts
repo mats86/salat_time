@@ -162,6 +162,7 @@ export async function getPostLoginPath(
 
 export async function fetchCurrentUser(accessToken: string): Promise<DirectusUser | null> {
   const res = await fetch(`${getDirectusProxyBase()}/users/me?fields=*,role.*`, {
+    credentials: 'omit',
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) return null;
@@ -220,6 +221,11 @@ export async function refreshAccessToken(
     body: JSON.stringify({ mode: 'json', refresh_token: refresh }),
   });
   if (!res.ok) {
+    const existingAccess = getAccessToken();
+    if (existingAccess) {
+      const user = await fetchCurrentUser(existingAccess);
+      if (user) return existingAccess;
+    }
     if (source === 'biometric') {
       clearBiometricRefreshToken();
     } else {

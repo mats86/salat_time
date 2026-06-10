@@ -100,6 +100,16 @@ export interface DirectusUser {
   role?: { id: string; name: string; admin_access?: boolean };
 }
 
+export interface MagicLoginLink {
+  id: string;
+  user: string | DirectusUser;
+  email: string;
+  token_hash?: string;
+  expires_at: string;
+  used_at?: string | null;
+  date_created?: string;
+}
+
 export interface MergedPrayerTime {
   name: PrayerName;
   time: string;

@@ -7,6 +7,7 @@ import { useLang } from '@/components/providers/LangProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useBiometric } from '@/hooks/useBiometric';
 import { GoogleIcon } from '@/components/auth/GoogleIcon';
+import { MagicLinkLogin } from '@/components/auth/MagicLinkLogin';
 import { getGoogleOAuthUrl } from '@/lib/auth';
 import { isBiometricEnabled } from '@/lib/biometric';
 import type { Lang } from '@/types';
@@ -284,6 +285,8 @@ export default function LoginPage() {
             <span className="font-title-md text-title-md">{tr.loginWithGoogle}</span>
           </button>
 
+          <MagicLinkLogin email={email} onEmailChange={setEmail} variant="mobile" />
+
           {showBiometric && (
             <button
               type="button"
@@ -513,6 +516,8 @@ export default function LoginPage() {
                   <GoogleIcon className="w-5 h-5 shrink-0" />
                   <span className="font-title-md text-title-md text-on-surface">{tr.loginWithGoogle}</span>
                 </button>
+
+                <MagicLinkLogin email={email} onEmailChange={setEmail} variant="desktop" />
 
                 {showBiometric && (
                   <button

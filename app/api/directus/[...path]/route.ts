@@ -24,10 +24,20 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
     if (value) headers.set(key, value);
   }
 
-  if (cookie && isAuthRoute && !isCredentialLogin && !isTokenRefresh) {
-    headers.set('cookie', cookie);
-  } else if (cookie && hasSessionCookie && !isAuthRoute) {
-    headers.set('cookie', cookie);
+  const hasBearer = headers.has('authorization');
+  const cookieForUpstream =
+    hasBearer && cookie
+      ? cookie
+          .split(';')
+          .map((part) => part.trim())
+          .filter((part) => part && !part.startsWith('directus_session_token='))
+          .join('; ')
+      : cookie;
+
+  if (cookieForUpstream && isAuthRoute && !isCredentialLogin && !isTokenRefresh) {
+    headers.set('cookie', cookieForUpstream);
+  } else if (cookieForUpstream && hasSessionCookie && !isAuthRoute && !hasBearer) {
+    headers.set('cookie', cookieForUpstream);
   }
 
   if (

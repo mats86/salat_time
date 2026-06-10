@@ -8,7 +8,14 @@ import {
   updateItem,
   deleteItem,
 } from '@directus/sdk';
-import type { Mosque, MosqueEvent, MosquePrayerTimes, ChangeRequest, MosqueStaff } from '@/types';
+import type {
+  Mosque,
+  MosqueEvent,
+  MosquePrayerTimes,
+  ChangeRequest,
+  MosqueStaff,
+  MagicLoginLink,
+} from '@/types';
 
 export interface DirectusSchema {
   mosques: Mosque[];
@@ -16,6 +23,7 @@ export interface DirectusSchema {
   mosque_events: MosqueEvent[];
   mosque_staff: MosqueStaff[];
   change_requests: ChangeRequest[];
+  magic_login_links: MagicLoginLink[];
 }
 
 const directusPublicUrl =

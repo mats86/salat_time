@@ -21,11 +21,21 @@ import {
 import { syncBiometricRefreshToken } from '@/lib/biometric';
 import type { DirectusUser } from '@/types';
 
+let loadUserInflight: Promise<DirectusUser | null> | null = null;
+
 export function useAuth() {
   const [user, setUser] = useState<DirectusUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
+    if (loadUserInflight) {
+      const resolved = await loadUserInflight;
+      setUser(resolved);
+      setLoading(false);
+      return;
+    }
+
+    loadUserInflight = (async (): Promise<DirectusUser | null> => {
     let token = getAccessToken();
     const storedRefresh = getRefreshToken();
 
@@ -37,15 +47,12 @@ export function useAuth() {
       const sessionUser = await fetchCurrentUserWithSession();
       if (sessionUser) {
         setSessionAuth(true);
-        setUser(sessionUser);
-      } else if (usesSessionAuth()) {
-        clearSessionAuth();
-        setUser(null);
-      } else {
-        setUser(null);
+        return sessionUser;
       }
-      setLoading(false);
-      return;
+      if (usesSessionAuth()) {
+        clearSessionAuth();
+      }
+      return null;
     }
 
     let u = await fetchCurrentUser(token);
@@ -61,23 +68,27 @@ export function useAuth() {
       const sessionUser = await fetchCurrentUserWithSession();
       if (sessionUser) {
         setSessionAuth(true);
-        setUser(sessionUser);
-        setLoading(false);
-        return;
+        return sessionUser;
       }
       clearTokens();
       clearSessionAuth();
-      setUser(null);
-      setLoading(false);
-      return;
+      return null;
     }
 
     clearSessionAuth();
     directus.setToken(token);
     const refresh = getRefreshToken();
     if (refresh) syncBiometricRefreshToken(refresh);
-    setUser(u);
-    setLoading(false);
+    return u;
+    })();
+
+    try {
+      const resolved = await loadUserInflight;
+      setUser(resolved);
+    } finally {
+      loadUserInflight = null;
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
