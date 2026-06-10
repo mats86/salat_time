@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  exchangeDirectusSessionForTokens,
   fetchDirectusUserWithSession,
   getDirectusSessionToken,
 } from '@/lib/oauth-session-server';
@@ -47,6 +48,14 @@ export async function GET(request: NextRequest) {
     const sessionToken = getDirectusSessionToken(request);
     if (!sessionToken) {
       return NextResponse.redirect(publicUrl(request, '/auth/login?error=oauth'));
+    }
+
+    const tokens = await exchangeDirectusSessionForTokens(sessionToken);
+    if (tokens) {
+      const url = publicUrl(request, '/auth/callback');
+      url.searchParams.set('access_token', tokens.access_token);
+      url.searchParams.set('refresh_token', tokens.refresh_token);
+      return NextResponse.redirect(url);
     }
 
     const user = await fetchDirectusUserWithSession(sessionToken);

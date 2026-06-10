@@ -4,10 +4,12 @@ import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   completeOAuthCallback,
+  exchangeSessionForTokens,
   getAccessToken,
   getPostLoginPath,
   getRefreshToken,
 } from '@/lib/auth';
+import directus from '@/lib/directus';
 import { syncBiometricRefreshToken } from '@/lib/biometric';
 import { Spinner } from '@/components/ui/Spinner';
 
@@ -43,6 +45,14 @@ export default function AuthCallbackPage() {
       }
 
       if (result.user) {
+        const tokens = await exchangeSessionForTokens();
+        if (tokens) {
+          directus.setToken(tokens.access_token);
+          if (tokens.refresh_token) syncBiometricRefreshToken(tokens.refresh_token);
+          const path = await getPostLoginPath(tokens.access_token, redirectTo);
+          if (!cancelled) router.replace(path);
+          return;
+        }
         const path = await getPostLoginPath(result.user, redirectTo);
         if (!cancelled) router.replace(path);
         return;

@@ -8,6 +8,11 @@ function getDirectusOrigin() {
 }
 
 export function getDirectusSessionToken(request: NextRequest): string | null {
+  const fromQuery =
+    request.nextUrl.searchParams.get('directus_session_token') ??
+    request.nextUrl.searchParams.get('session_token');
+  if (fromQuery) return fromQuery;
+
   const fromCookies = request.cookies.get('directus_session_token')?.value;
   if (fromCookies) return fromCookies;
 
@@ -69,8 +74,13 @@ export async function exchangeDirectusSessionForTokens(
   if (!res.ok) return null;
 
   const json = await res.json().catch(() => null);
-  const access = json?.data?.access_token as string | undefined;
-  const refresh = json?.data?.refresh_token as string | undefined;
+  const access =
+    (json?.data?.access_token as string | undefined) ??
+    (json?.access_token as string | undefined);
+  const refresh =
+    (json?.data?.refresh_token as string | undefined) ??
+    (json?.refresh_token as string | undefined);
+
   if (!access || !refresh) return null;
 
   return { access_token: access, refresh_token: refresh };

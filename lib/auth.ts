@@ -251,7 +251,7 @@ export function getOAuthCallbackUrl(): string {
 export function getGoogleOAuthUrl(redirectUrl?: string): string {
   const base = getDirectusPublicBase();
   const redirect = redirectUrl ?? getOAuthCallbackUrl();
-  return `${base}/auth/login/google?redirect=${encodeURIComponent(redirect)}`;
+  return `${base}/auth/login/google?redirect=${encodeURIComponent(redirect)}&mode=json`;
 }
 
 export async function loginWithEmailPassword(email: string, password: string): Promise<{
