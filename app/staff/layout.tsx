@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useLang } from '@/components/providers/LangProvider';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -12,12 +12,15 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   const { user, loading, isStaff, isAdmin, logout } = useAuth();
   const { tr } = useLang();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/auth/login');
+    if (!loading && !user) {
+      router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+    }
     // Allow any authenticated user into /staff by default.
     // Role-specific restrictions can be enforced per action on backend.
-  }, [loading, user, isStaff, isAdmin, router]);
+  }, [loading, user, isStaff, isAdmin, router, pathname]);
 
   const navItems = [
     { href: '/staff', icon: 'dashboard', label: tr.overview },

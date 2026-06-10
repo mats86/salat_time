@@ -16,9 +16,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) router.replace('/auth/login');
+    if (!loading && !user) {
+      router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
+    }
     if (!loading && user && !isAdmin) router.replace('/auth/login?error=admin_only');
-  }, [loading, user, isAdmin, router]);
+  }, [loading, user, isAdmin, router, pathname]);
 
   useEffect(() => {
     setMenuOpen(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLang } from '@/components/providers/LangProvider';
@@ -36,6 +36,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showBiometric, setShowBiometric] = useState(false);
+  const autoBioRan = useRef(false);
 
   const brandName = lang === 'ar' ? tr.appNameAr : tr.appName;
 
@@ -80,7 +81,7 @@ export default function LoginPage() {
     window.location.href = getGoogleOAuthUrl();
   };
 
-  const redirectAfterLogin = async (token: string) => {
+  const redirectAfterLogin = useCallback(async (token: string) => {
     const redirectTo = new URLSearchParams(window.location.search).get('redirect');
     const { fetchCurrentUser, isAdmin, isStaff } = await import('@/lib/auth');
     const u = await fetchCurrentUser(token);
@@ -88,9 +89,9 @@ export default function LoginPage() {
     else if (u && isAdmin(u)) router.push('/admin');
     else if (u && isStaff(u)) router.push('/staff');
     else router.push('/staff');
-  };
+  }, [router]);
 
-  const handleBiometricLogin = async () => {
+  const handleBiometricLogin = useCallback(async () => {
     setError(null);
     const { user: u, error: bioErr } = await loginWithBiometric();
     if (!u) {
@@ -100,7 +101,17 @@ export default function LoginPage() {
     const token = localStorage.getItem('dt_access');
     if (token) await redirectAfterLogin(token);
     else router.push('/staff');
-  };
+  }, [loginWithBiometric, redirectAfterLogin, router, tr.biometricExpired, tr.biometricFailed]);
+
+  useEffect(() => {
+    if (autoBioRan.current) return;
+    if (!isBiometricEnabled()) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error')) return;
+
+    autoBioRan.current = true;
+    handleBiometricLogin();
+  }, [handleBiometricLogin]);
 
   const cycleLanguage = () => {
     const idx = LANGS.findIndex((l) => l.code === lang);
