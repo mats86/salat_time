@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { defineEndpoint } from '@directus/extensions-sdk';
 import jwt from 'jsonwebtoken';
-import ms from 'ms';
+import ms, { type StringValue } from 'ms';
 
 type PolicyAccess = {
   admin_access: boolean | number | null;
@@ -15,7 +15,7 @@ function hashToken(raw: string): string {
 function getMilliseconds(value: string | number | undefined, fallback: number): number {
   if (typeof value === 'number') return value;
   if (!value) return fallback;
-  const parsed = ms(value);
+  const parsed = ms(value as StringValue);
   return typeof parsed === 'number' ? parsed : fallback;
 }
 
