@@ -12,11 +12,12 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useLang } from '@/components/providers/LangProvider';
 import { getLocationErrorMessage } from '@/lib/i18n';
 import { useLocation } from '@/hooks/useLocation';
+import { usePrayerAlerts } from '@/hooks/usePrayerAlerts';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import { useNearbyMosques } from '@/hooks/useNearbyMosques';
 
 export default function HomePage() {
-  const { tr } = useLang();
+  const { lang, tr } = useLang();
   const {
     coords,
     loading: locLoading,
@@ -26,11 +27,10 @@ export default function HomePage() {
     setManualLocation,
     source,
   } = useLocation();
-  const { hijri, countdown, nextPrayer, schedule, loading: prayerLoading } = usePrayerTimes(
-    coords?.lat,
-    coords?.lng
-  );
+  const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading } =
+    usePrayerTimes(coords?.lat, coords?.lng);
   const { mosques, loading: mosquesLoading } = useNearbyMosques(coords?.lat, coords?.lng);
+  usePrayerAlerts(timings, lang);
   const [locationOpen, setLocationOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 

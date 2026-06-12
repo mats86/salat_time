@@ -11,8 +11,14 @@ import {
   getMosqueName,
   getPrayerLabel,
 } from '@/lib/i18n';
+import { PrayerAlertToggle } from '@/components/prayer/PrayerAlertToggle';
+import type { PrayerAlertName } from '@/lib/prayer-alerts';
 import { cn, formatCountdownShort, formatTime12 } from '@/lib/utils';
 import type { HijriDate, Lang, MergedPrayerTime, Mosque, PrayerName } from '@/types';
+
+function isAlertPrayer(name: PrayerName): name is PrayerAlertName {
+  return name !== 'Sunrise';
+}
 
 const HOME_HERO_IMAGE =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuDEKeyco3bnCrbXyXmk__mN4Df4IkbgbKvVh4Pr8D85BngwE3wEHQlhOHatyj96hMqoe6SKIDuPmtgfzdOQXwrA2svL6nl-debUC_rZ9vbxvmV0R9ZkkDT4Go6At2hL-EubHf8LiWLPh-cdDfGyS2AaYbQUFKY4nHnbvCaQJfIUaRbJwYiebhPwM81CF9DPya4Z3cufugDn7ZM_O7v_AUihsT_v3p5Wrk2rUXZD7elTuswqCXb5g-NMvomZsPoYCo09lkc13KwdDWcz';
@@ -205,7 +211,6 @@ export function HomeDesktop({
                 {schedule.map((prayer) => {
                   const label = getPrayerLabel(lang, prayer.name);
                   const dimmed = prayer.isPast && !prayer.isCurrent;
-                  const isSunrise = prayer.name === 'Sunrise';
 
                   if (prayer.isCurrent) {
                     return (
@@ -232,12 +237,13 @@ export function HomeDesktop({
                           <span className="font-title-md text-title-md text-secondary">
                             {formatTime12(prayer.time)}
                           </span>
-                          <span
-                            className="material-symbols-outlined text-secondary material-symbols-filled"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            notifications_active
-                          </span>
+                          {isAlertPrayer(prayer.name) && (
+                            <PrayerAlertToggle
+                              prayer={prayer.name}
+                              filled
+                              className="text-sm"
+                            />
+                          )}
                         </div>
                       </div>
                     );
@@ -266,17 +272,12 @@ export function HomeDesktop({
                         >
                           {formatTime12(prayer.time)}
                         </span>
-                        {!isSunrise && (
-                          <span
-                            className={cn(
-                              'material-symbols-outlined text-sm',
-                              dimmed
-                                ? 'text-outline-variant'
-                                : 'text-on-surface-variant cursor-pointer hover:text-secondary transition-colors'
-                            )}
-                          >
-                            {dimmed ? 'notifications_off' : 'notifications'}
-                          </span>
+                        {isAlertPrayer(prayer.name) && (
+                          <PrayerAlertToggle
+                            prayer={prayer.name}
+                            dimmed={dimmed}
+                            className="text-sm"
+                          />
                         )}
                       </div>
                     </div>

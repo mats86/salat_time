@@ -1,6 +1,7 @@
 'use client';
 
 import { useLang } from '@/components/providers/LangProvider';
+import { usePrayerAlertSettings } from '@/hooks/usePrayerAlertSettings';
 import { getPrayerLabel } from '@/lib/i18n';
 import { formatTime12, formatCountdownShort } from '@/lib/utils';
 import type { PrayerName } from '@/types';
@@ -13,12 +14,15 @@ interface PrayerTimeHeroProps {
 
 export function PrayerTimeHero({ prayerName, prayerTime, countdown }: PrayerTimeHeroProps) {
   const { lang, tr } = useLang();
+  const { settings } = usePrayerAlertSettings();
   const parts = countdown.split(':').map(Number);
   let short = countdown;
   if (parts.length === 3) {
     const [h, m, s] = parts;
     short = formatCountdownShort(h * 3600 + m * 60 + s);
   }
+
+  const alertsActive = settings.masterEnabled;
 
   return (
     <section className="relative overflow-hidden rounded-xl bg-primary-container p-8 prayer-glow border border-primary/10">
@@ -38,8 +42,15 @@ export function PrayerTimeHero({ prayerName, prayerTime, countdown }: PrayerTime
           </div>
           <div className="w-1 h-1 rounded-full bg-outline-variant" />
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">notifications_active</span>
-            <span className="font-body-sm text-body-sm">{tr.alertOn}</span>
+            <span
+              className={`material-symbols-outlined text-sm ${alertsActive ? 'material-symbols-filled' : ''}`}
+              style={alertsActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+            >
+              {alertsActive ? 'notifications_active' : 'notifications_off'}
+            </span>
+            <span className="font-body-sm text-body-sm">
+              {alertsActive ? tr.alertOn : tr.alertOff}
+            </span>
           </div>
         </div>
       </div>

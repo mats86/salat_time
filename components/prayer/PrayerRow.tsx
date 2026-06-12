@@ -1,7 +1,9 @@
 'use client';
 
 import { useLang } from '@/components/providers/LangProvider';
+import { PrayerAlertToggle } from '@/components/prayer/PrayerAlertToggle';
 import { getPrayerLabel } from '@/lib/i18n';
+import type { PrayerAlertName } from '@/lib/prayer-alerts';
 import { formatTime12 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { MergedPrayerTime } from '@/types';
@@ -42,6 +44,7 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
   }
 
   const dimmed = prayer.isPast;
+  const isSunrise = prayer.name === 'Sunrise';
 
   return (
     <div
@@ -58,9 +61,18 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
         </span>
         <span className="font-title-md text-title-md text-on-surface">{label}</span>
       </div>
-      <span className="font-title-md text-title-md text-on-surface">
-        {formatTime12(prayer.time)}
-      </span>
+      <div className="flex items-center gap-3">
+        <span className="font-title-md text-title-md text-on-surface">
+          {formatTime12(prayer.time)}
+        </span>
+        {!isSunrise && (
+          <PrayerAlertToggle
+            prayer={prayer.name as PrayerAlertName}
+            dimmed={dimmed}
+            className="text-sm"
+          />
+        )}
+      </div>
     </div>
   );
 }
