@@ -1,6 +1,6 @@
 import { isPwaInstalled } from '@/lib/biometric';
-import { getPrayerLabel, type Lang } from '@/lib/i18n';
-import type { PrayerTimings } from '@/types';
+import { getPrayerLabel } from '@/lib/i18n';
+import type { Lang, PrayerTimings } from '@/types';
 
 export type PrayerAlertName = 'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
 

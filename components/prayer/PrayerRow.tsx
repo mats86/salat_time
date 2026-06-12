@@ -22,21 +22,30 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
   const label = getPrayerLabel(lang, prayer.name);
 
   if (prayer.isCurrent) {
+    const isSunrise = prayer.name === 'Sunrise';
+
     return (
       <div className="flex justify-between items-center px-4 py-4 bg-primary-container/30 rounded-xl border border-secondary/50 relative overflow-hidden">
-        <div className="flex items-center gap-3 relative z-10">
-          <span className="material-symbols-outlined text-secondary material-symbols-filled">
+        <span className="absolute top-0 start-0 z-10 font-label-caps text-[10px] text-label-caps text-secondary-fixed bg-secondary-container/20 px-2 py-0.5 rounded-ee-md border-e border-b border-secondary/30">
+          {tr.current}
+        </span>
+        <div className="flex items-center gap-3 relative z-10 min-w-0">
+          <span className="material-symbols-outlined text-secondary material-symbols-filled shrink-0">
             {PRAYER_ICONS[prayer.name]}
           </span>
-          <span className="font-title-md text-title-md text-secondary">{label}</span>
+          <span className="font-title-md text-title-md text-secondary truncate">{label}</span>
         </div>
-        <div className="flex items-center gap-4 relative z-10">
-          <span className="font-label-caps text-label-caps text-secondary-fixed bg-secondary-container/20 px-2 py-0.5 rounded">
-            {tr.current}
-          </span>
+        <div className="flex items-center gap-3 relative z-10 shrink-0">
           <span className="font-title-md text-title-md text-secondary">
             {formatTime12(prayer.time)}
           </span>
+          {!isSunrise && (
+            <PrayerAlertToggle
+              prayer={prayer.name as PrayerAlertName}
+              filled
+              className="text-sm"
+            />
+          )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent" />
       </div>
