@@ -1,4 +1,9 @@
-"""Generate PWA icon PNGs for Salat Zeit."""
+"""Generate PWA icon PNGs for Salat Zeit.
+
+DEPRECATED: App icons are maintained manually from AppIcons.zip.
+Do not run this script — it would overwrite public/icons/icon-192.png
+and public/icons/icon-512.png with generated placeholders.
+"""
 from pathlib import Path
 
 try:

@@ -3,14 +3,13 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useLang } from '@/components/providers/LangProvider';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { LangSwitcher } from '@/components/layout/LangSwitcher';
+import { StaffSidebar } from '@/components/staff/StaffSidebar';
+import { StaffTopBar } from '@/components/staff/StaffTopBar';
+import { StaffMobileNav } from '@/components/staff/StaffMobileNav';
 import { Spinner } from '@/components/ui/Spinner';
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, isStaff, isAdmin, logout } = useAuth();
-  const { tr } = useLang();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -18,17 +17,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
     if (!loading && !user) {
       router.replace(`/auth/login?redirect=${encodeURIComponent(pathname)}`);
     }
-    // Allow any authenticated user into /staff by default.
-    // Role-specific restrictions can be enforced per action on backend.
-  }, [loading, user, isStaff, isAdmin, router, pathname]);
-
-  const navItems = [
-    { href: '/staff', icon: 'dashboard', label: tr.overview },
-    { href: '/staff/times', icon: 'schedule', label: tr.prayerTimes },
-    { href: '/staff/events', icon: 'event', label: tr.events },
-    { href: '/staff/info', icon: 'mosque', label: tr.mosqueInfo },
-    { href: '/staff/settings', icon: 'settings', label: tr.settings },
-  ];
+  }, [loading, user, router, pathname]);
 
   if (loading) {
     return (
@@ -39,17 +28,13 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar items={navItems} title={tr.staffPortal} />
-      <div className="flex-1 flex flex-col">
-        <header className="border-b border-outline/20 px-6 py-4 flex justify-between items-center">
-          <LangSwitcher />
-          <button type="button" onClick={() => logout().then(() => router.push('/'))} className="text-sm text-on-surface-variant hover:text-gold">
-            {tr.logout}
-          </button>
-        </header>
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
-      </div>
+    <div className="bg-primary-container md:bg-background text-on-surface font-body-lg min-h-screen overflow-x-hidden">
+      <StaffSidebar />
+      <StaffTopBar />
+      <main className="md:ml-64 mt-20 md:mt-0 pt-0 md:pt-8 px-margin-mobile md:px-10 pb-32">
+        {children}
+      </main>
+      <StaffMobileNav />
     </div>
   );
 }

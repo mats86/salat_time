@@ -65,6 +65,17 @@ export async function fetchAllChangeRequests() {
   );
 }
 
+export async function fetchRecentChangeRequests(limit = 5) {
+  const client = getServerDirectus();
+  return client.request(
+    readItems('change_requests', {
+      fields: ['*'],
+      sort: ['-date_created'],
+      limit,
+    })
+  );
+}
+
 export async function fetchMosqueStaff() {
   const client = getServerDirectus();
   return client.request(
