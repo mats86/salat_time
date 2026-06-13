@@ -157,6 +157,22 @@ self.addEventListener('notificationclick', (event) => {
 const NAV_DENY = /^\/(api|auth|admin|staff|mosque)\//;
 const CACHE_PRIORITY = ['start-url', 'pages', 'others'];
 const OFFLINE_URL = '/offline.html';
+const NETWORK_TIMEOUT_MS = 2000;
+
+function isDocumentRequest(request) {
+  return request.mode === 'navigate' || request.destination === 'document';
+}
+
+async function fetchWithTimeout(request, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 async function matchInCache(cacheName, request) {
   const cache = await caches.open(cacheName);
@@ -199,7 +215,7 @@ async function serveOfflinePage() {
 
 async function handleNavigation(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetchWithTimeout(request, NETWORK_TIMEOUT_MS);
     if (response.ok || response.type === 'opaqueredirect') {
       if (response.redirected) {
         return new Response(response.body, {
@@ -222,7 +238,7 @@ async function handleNavigation(request) {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (event.request.mode !== 'navigate') return;
+  if (!isDocumentRequest(event.request)) return;
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;

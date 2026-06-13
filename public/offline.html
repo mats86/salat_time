@@ -15,6 +15,7 @@
         font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
         padding: 20px 16px 32px;
       }
+      body[dir="rtl"] { font-family: "Segoe UI", Tahoma, sans-serif; }
       .banner {
         display: flex;
         align-items: center;
@@ -28,30 +29,44 @@
         font-size: 0.85rem;
         color: #c9a84c;
       }
-      header {
-        text-align: center;
-        margin-bottom: 24px;
-      }
+      header { text-align: center; margin-bottom: 20px; }
       header img { border-radius: 20px; margin-bottom: 12px; }
       h1 { font-size: 1.5rem; font-weight: 600; color: #c9a84c; }
-      .location {
-        margin-top: 6px;
-        font-size: 0.85rem;
+      .location { margin-top: 6px; font-size: 0.85rem; color: #a8d5b5; }
+      .hijri { margin-top: 4px; font-size: 0.8rem; color: #5fa87a; }
+      .hero {
+        max-width: 400px;
+        margin: 0 auto 20px;
+        padding: 20px 16px;
+        text-align: center;
+        background: #1a3a2a;
+        border: 1px solid rgba(201, 168, 76, 0.2);
+        border-radius: 16px;
+      }
+      .hero-label { font-size: 0.8rem; color: #a8d5b5; margin-bottom: 4px; }
+      .hero-prayer { font-size: 1.1rem; color: #c9a84c; font-weight: 600; }
+      .hero-countdown {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #f0d080;
+        font-variant-numeric: tabular-nums;
+        margin-top: 8px;
+      }
+      .section-title {
+        max-width: 400px;
+        margin: 0 auto 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
         color: #a8d5b5;
       }
-      .hijri {
-        margin-top: 4px;
-        font-size: 0.8rem;
-        color: #5fa87a;
-      }
-      .prayers {
+      .prayers, .mosques {
         display: flex;
         flex-direction: column;
         gap: 8px;
         max-width: 400px;
-        margin: 0 auto;
+        margin: 0 auto 20px;
       }
-      .prayer-row {
+      .prayer-row, .mosque-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -59,14 +74,21 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 14px;
         padding: 14px 16px;
+        gap: 12px;
       }
-      .prayer-name { font-size: 0.95rem; color: #e8f5ee; }
-      .prayer-name-ar { font-size: 0.8rem; color: #c9a84c; margin-top: 2px; }
+      .prayer-name, .mosque-name { font-size: 0.95rem; color: #e8f5ee; }
+      .prayer-name-ar, .mosque-name-ar { font-size: 0.8rem; color: #c9a84c; margin-top: 2px; }
       .prayer-time {
         font-size: 1.1rem;
         font-weight: 600;
         color: #f0d080;
         font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+      }
+      .mosque-distance {
+        font-size: 0.85rem;
+        color: #5fa87a;
+        flex-shrink: 0;
       }
       .empty {
         text-align: center;
@@ -81,7 +103,7 @@
         flex-direction: column;
         align-items: center;
         gap: 12px;
-        margin-top: 28px;
+        margin-top: 12px;
       }
       button {
         background: #c9a84c;
@@ -94,11 +116,11 @@
         cursor: pointer;
       }
       button:active { opacity: 0.9; }
-      .sub { font-size: 0.8rem; color: #a8a5a4; text-align: center; }
+      .sub { font-size: 0.8rem; color: #a8a5a4; text-align: center; max-width: 320px; }
     </style>
   </head>
   <body>
-    <div class="banner" id="banner">☁ Offline — gespeicherte Daten</div>
+    <div class="banner" id="banner"></div>
 
     <header>
       <img src="/icons/icon-192.png" alt="" width="72" height="72" />
@@ -107,28 +129,81 @@
       <p class="hijri" id="hijri"></p>
     </header>
 
+    <div class="hero" id="hero" hidden>
+      <p class="hero-label" id="hero-label"></p>
+      <p class="hero-prayer" id="hero-prayer"></p>
+      <p class="hero-countdown" id="hero-countdown">00:00:00</p>
+    </div>
+
+    <p class="section-title" id="prayers-title" hidden></p>
     <div class="prayers" id="prayers"></div>
-    <p class="empty" id="empty" hidden>
-      Keine gespeicherten Gebetszeiten gefunden. Öffne die App mindestens einmal mit Internet.
-    </p>
+
+    <p class="section-title" id="mosques-title" hidden></p>
+    <div class="mosques" id="mosques"></div>
+
+    <p class="empty" id="empty" hidden></p>
 
     <div class="actions">
-      <button type="button" id="retry">Erneut versuchen</button>
-      <p class="sub">Die App synchronisiert sich automatisch, sobald du wieder online bist.</p>
+      <button type="button" id="retry"></button>
+      <p class="sub" id="sync-hint"></p>
     </div>
 
     <script>
       var PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-      var PRAYER_LABELS = {
-        Fajr: { de: 'Morgengebet', ar: 'الفجر' },
-        Sunrise: { de: 'Sonnenaufgang', ar: 'الشروق' },
-        Dhuhr: { de: 'Mittagsgebet', ar: 'الظهر' },
-        Asr: { de: 'Nachmittagsgebet', ar: 'العصر' },
-        Maghrib: { de: 'Abendgebet', ar: 'المغرب' },
-        Isha: { de: 'Nachtgebet', ar: 'العشاء' },
-      };
       var PRAYER_PREFIX = 'sz_prayer_times_';
+      var MOSQUES_PREFIX = 'sz_mosques_';
       var LOCATION_KEY = 'salat_location_v2';
+      var LANG_KEY = 'lang';
+
+      var PRAYER_LABELS = {
+        Fajr: { de: 'Morgengebet', ar: 'الفجر', en: 'Fajr' },
+        Sunrise: { de: 'Sonnenaufgang', ar: 'الشروق', en: 'Sunrise' },
+        Dhuhr: { de: 'Mittagsgebet', ar: 'الظهر', en: 'Dhuhr' },
+        Asr: { de: 'Nachmittagsgebet', ar: 'العصر', en: 'Asr' },
+        Maghrib: { de: 'Abendgebet', ar: 'المغرب', en: 'Maghrib' },
+        Isha: { de: 'Nachtgebet', ar: 'العشاء', en: 'Isha' },
+      };
+
+      var I18N = {
+        de: {
+          banner: '☁ Offline — gespeicherte Daten',
+          online: '✓ Wieder online',
+          nextPrayer: 'Nächstes Gebet',
+          prayers: 'Gebetszeiten',
+          mosques: 'Moscheen in der Nähe',
+          empty: 'Keine gespeicherten Gebetszeiten gefunden. Öffne die App mindestens einmal mit Internet.',
+          retry: 'Erneut versuchen',
+          syncHint: 'Die App synchronisiert sich automatisch, sobald du wieder online bist.',
+          km: 'km',
+        },
+        ar: {
+          banner: '☁ غير متصل — بيانات محفوظة',
+          online: '✓ متصل مجدداً',
+          nextPrayer: 'الصلاة القادمة',
+          prayers: 'أوقات الصلاة',
+          mosques: 'مساجد قريبة',
+          empty: 'لا توجد أوقات صلاة محفوظة. افتح التطبيق مرة واحدة على الأقل مع الإنترنت.',
+          retry: 'إعادة المحاولة',
+          syncHint: 'سيتم مزامنة التطبيق تلقائياً عند عودة الاتصال.',
+          km: 'كم',
+        },
+        en: {
+          banner: '☁ Offline — saved data',
+          online: '✓ Back online',
+          nextPrayer: 'Next prayer',
+          prayers: 'Prayer times',
+          mosques: 'Nearby mosques',
+          empty: 'No saved prayer times found. Open the app at least once with internet.',
+          retry: 'Try again',
+          syncHint: 'The app will sync automatically when you are back online.',
+          km: 'km',
+        },
+      };
+
+      var lang = 'de';
+      var tr = I18N.de;
+      var countdownTimer = null;
+      var currentTimings = null;
 
       function todayDateKey() {
         return new Date().toISOString().slice(0, 10);
@@ -136,6 +211,18 @@
 
       function coordKey(lat, lng) {
         return lat.toFixed(2) + '_' + lng.toFixed(2);
+      }
+
+      function loadLang() {
+        try {
+          var stored = localStorage.getItem(LANG_KEY);
+          if (stored === 'ar' || stored === 'en' || stored === 'de') {
+            lang = stored;
+          }
+        } catch (e) { /* keep default */ }
+        tr = I18N[lang] || I18N.de;
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
       }
 
       function loadLocation() {
@@ -171,6 +258,68 @@
         return latest;
       }
 
+      function getCachedMosques(lat, lng) {
+        try {
+          var raw = localStorage.getItem(MOSQUES_PREFIX + coordKey(lat, lng));
+          if (!raw) return null;
+          var entry = JSON.parse(raw);
+          return entry.mosques || null;
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function getPrayerLabel(name) {
+        var labels = PRAYER_LABELS[name] || { de: name, ar: name, en: name };
+        return labels[lang] || labels.de;
+      }
+
+      function getMosqueName(mosque) {
+        if (lang === 'ar' && mosque.name_ar) return mosque.name_ar;
+        if (lang === 'en' && mosque.name_en) return mosque.name_en;
+        return mosque.name || mosque.name_en || mosque.name_ar || 'Mosque';
+      }
+
+      function getNextPrayer(timings) {
+        var now = new Date();
+        for (var i = 0; i < PRAYER_ORDER.length; i++) {
+          var name = PRAYER_ORDER[i];
+          var parts = timings[name].split(':').map(Number);
+          var prayerTime = new Date();
+          prayerTime.setHours(parts[0], parts[1], 0, 0);
+          if (prayerTime > now) {
+            return { name: name, time: timings[name] };
+          }
+        }
+        return { name: 'Fajr', time: timings.Fajr };
+      }
+
+      function getCountdownSeconds(targetTime) {
+        var parts = targetTime.split(':').map(Number);
+        var target = new Date();
+        target.setHours(parts[0], parts[1], 0, 0);
+        var diff = Math.floor((target.getTime() - Date.now()) / 1000);
+        if (diff < 0) diff += 24 * 60 * 60;
+        return diff;
+      }
+
+      function formatCountdown(totalSeconds) {
+        var h = Math.floor(totalSeconds / 3600);
+        var m = Math.floor((totalSeconds % 3600) / 60);
+        var s = totalSeconds % 60;
+        return String(h).padStart(2, '0') + ':' +
+          String(m).padStart(2, '0') + ':' +
+          String(s).padStart(2, '0');
+      }
+
+      function updateCountdown() {
+        if (!currentTimings) return;
+        var next = getNextPrayer(currentTimings);
+        document.getElementById('hero-prayer').textContent = getPrayerLabel(next.name) + ' · ' + next.time;
+        document.getElementById('hero-countdown').textContent =
+          formatCountdown(getCountdownSeconds(next.time));
+      }
+
       function renderPrayers(entry) {
         var container = document.getElementById('prayers');
         container.innerHTML = '';
@@ -179,20 +328,60 @@
           var time = entry.timings[name];
           if (!time) return;
 
-          var labels = PRAYER_LABELS[name] || { de: name, ar: name };
           var row = document.createElement('div');
           row.className = 'prayer-row';
           row.innerHTML =
             '<div>' +
-              '<div class="prayer-name">' + labels.de + '</div>' +
-              '<div class="prayer-name-ar">' + labels.ar + '</div>' +
+              '<div class="prayer-name">' + getPrayerLabel(name) + '</div>' +
+              (lang !== 'ar'
+                ? '<div class="prayer-name-ar">' + (PRAYER_LABELS[name] ? PRAYER_LABELS[name].ar : name) + '</div>'
+                : '') +
             '</div>' +
             '<div class="prayer-time">' + time + '</div>';
           container.appendChild(row);
         });
+
+        document.getElementById('prayers-title').textContent = tr.prayers;
+        document.getElementById('prayers-title').hidden = false;
+      }
+
+      function renderMosques(mosques) {
+        if (!mosques || mosques.length === 0) return;
+
+        var container = document.getElementById('mosques');
+        container.innerHTML = '';
+
+        mosques.slice(0, 5).forEach(function (mosque) {
+          var row = document.createElement('div');
+          row.className = 'mosque-row';
+          var distance = mosque.distance_km != null
+            ? mosque.distance_km.toFixed(1) + ' ' + tr.km
+            : '';
+          row.innerHTML =
+            '<div>' +
+              '<div class="mosque-name">' + getMosqueName(mosque) + '</div>' +
+              (mosque.city ? '<div class="mosque-name-ar">' + mosque.city + '</div>' : '') +
+            '</div>' +
+            (distance ? '<div class="mosque-distance">' + distance + '</div>' : '');
+          container.appendChild(row);
+        });
+
+        document.getElementById('mosques-title').textContent = tr.mosques;
+        document.getElementById('mosques-title').hidden = false;
+      }
+
+      function applyStaticText() {
+        document.getElementById('banner').textContent = tr.banner;
+        document.getElementById('retry').textContent = tr.retry;
+        document.getElementById('sync-hint').textContent = tr.syncHint;
+        document.getElementById('empty').textContent = tr.empty;
+        document.getElementById('hero-label').textContent = tr.nextPrayer;
       }
 
       function init() {
+        loadLang();
+        applyStaticText();
+
         var location = loadLocation();
         var entry = null;
 
@@ -200,6 +389,9 @@
           var label = location.label || (location.lat.toFixed(2) + '°, ' + location.lng.toFixed(2) + '°');
           document.getElementById('location').textContent = label;
           entry = getCachedPrayerTimes(location.lat, location.lng);
+
+          var mosques = getCachedMosques(location.lat, location.lng);
+          renderMosques(mosques);
         }
 
         if (entry && entry.timings) {
@@ -207,7 +399,12 @@
             var hijriText = entry.hijri.day + '. ' + entry.hijri.month + ' ' + entry.hijri.year + ' AH';
             document.getElementById('hijri').textContent = hijriText;
           }
+          currentTimings = entry.timings;
           renderPrayers(entry);
+          document.getElementById('hero').hidden = false;
+          updateCountdown();
+          if (countdownTimer) clearInterval(countdownTimer);
+          countdownTimer = setInterval(updateCountdown, 1000);
         } else {
           document.getElementById('empty').hidden = false;
         }
@@ -218,7 +415,7 @@
       });
 
       window.addEventListener('online', function () {
-        document.getElementById('banner').textContent = '✓ Wieder online';
+        document.getElementById('banner').textContent = tr.online;
         window.location.replace('/');
       });
 

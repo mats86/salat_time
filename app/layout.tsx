@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Libre_Caslon_Text, Inter, Amiri } from 'next/font/google';
 import { LangProvider } from '@/components/providers/LangProvider';
+import { CacheWarmup } from '@/components/layout/CacheWarmup';
 import './globals.css';
 
 const libreCaslon = Libre_Caslon_Text({
@@ -44,7 +45,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={`${libreCaslon.variable} ${inter.variable} ${amiri.variable}`}>
+    <html
+      lang="de"
+      className={`${libreCaslon.variable} ${inter.variable} ${amiri.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <link
@@ -52,8 +57,14 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
         />
       </head>
-      <body className="font-body-lg antialiased bg-background text-on-surface">
-        <LangProvider>{children}</LangProvider>
+      <body
+        className="font-body-lg antialiased bg-background text-on-surface"
+        suppressHydrationWarning
+      >
+        <LangProvider>
+          <CacheWarmup />
+          {children}
+        </LangProvider>
       </body>
     </html>
   );

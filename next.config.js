@@ -22,11 +22,12 @@ const withPWA = require('next-pwa')({
   ],
   runtimeCaching: [
     {
-      urlPattern: ({ request }) => request.mode === 'navigate',
+      urlPattern: ({ request }) =>
+        request.mode === 'navigate' || request.destination === 'document',
       handler: 'NetworkFirst',
       options: {
         cacheName: 'pages',
-        networkTimeoutSeconds: 3,
+        networkTimeoutSeconds: 1,
         expiration: {
           maxEntries: 16,
           maxAgeSeconds: 24 * 60 * 60,
