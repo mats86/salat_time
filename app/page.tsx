@@ -28,9 +28,9 @@ export default function HomePage() {
     setManualLocation,
     source,
   } = useLocation();
-  const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading, isOffline: prayerOffline, isStale } =
+  const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading, isStale } =
     usePrayerTimes(coords?.lat, coords?.lng);
-  const { mosques, loading: mosquesLoading, isOffline: mosquesOffline } = useNearbyMosques(coords?.lat, coords?.lng);
+  const { mosques, loading: mosquesLoading } = useNearbyMosques(coords?.lat, coords?.lng);
   usePrayerAlerts(timings, lang);
   const [locationOpen, setLocationOpen] = useState(false);
   const [networkOffline, setNetworkOffline] = useState(false);
@@ -49,8 +49,7 @@ export default function HomePage() {
     };
   }, []);
 
-  const showOfflineBanner =
-    networkOffline || prayerOffline || mosquesOffline || isStale;
+  const showOfflineBanner = networkOffline || isStale;
 
   useEffect(() => {
     if (permissionDenied && !coords) {
@@ -89,10 +88,10 @@ export default function HomePage() {
   return (
     <>
       {showOfflineBanner && (
-        <div className="fixed top-0 left-0 right-0 z-[60] md:pt-2 pointer-events-none">
+        <div className="fixed top-0 left-0 right-0 z-[60] md:pt-2">
           <OfflineBanner
-            offline={networkOffline || prayerOffline || mosquesOffline}
-            stale={isStale}
+            offline={networkOffline}
+            stale={isStale && !networkOffline}
           />
         </div>
       )}
