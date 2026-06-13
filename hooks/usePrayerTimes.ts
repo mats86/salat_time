@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchPrayerTimes,
   getNextPrayer,
@@ -8,7 +8,24 @@ import {
   formatCountdown,
   PRAYER_ORDER,
 } from '@/lib/aladhan';
+import {
+  cachePrayerTimes,
+  getCachedPrayerTimes,
+  isSameDayCache,
+  todayDateKey,
+} from '@/lib/offline-cache';
 import type { HijriDate, PrayerTimings, PrayerName, MergedPrayerTime } from '@/types';
+
+function applyPrayerData(
+  data: { timings: PrayerTimings; hijri: HijriDate },
+  setTimings: (t: PrayerTimings) => void,
+  setHijri: (h: HijriDate) => void,
+  setNextPrayer: (n: { name: PrayerName; time: string }) => void
+) {
+  setTimings(data.timings);
+  setHijri(data.hijri);
+  setNextPrayer(getNextPrayer(data.timings));
+}
 
 export function usePrayerTimes(lat?: number, lng?: number) {
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
@@ -17,19 +34,38 @@ export function usePrayerTimes(lat?: number, lng?: number) {
   const [nextPrayer, setNextPrayer] = useState<{ name: PrayerName; time: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isStale, setIsStale] = useState(false);
+  const dateRef = useRef(todayDateKey());
 
   const load = useCallback(async () => {
     if (lat == null || lng == null) return;
-    setLoading(true);
+
+    const cached = getCachedPrayerTimes(lat, lng);
+    if (cached) {
+      applyPrayerData(cached, setTimings, setHijri, setNextPrayer);
+      setIsStale(!isSameDayCache(cached.date));
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const data = await fetchPrayerTimes(lat, lng);
-      setTimings(data.timings);
-      setHijri(data.hijri);
-      const next = getNextPrayer(data.timings);
-      setNextPrayer(next);
+      cachePrayerTimes(lat, lng, data);
+      applyPrayerData(data, setTimings, setHijri, setNextPrayer);
       setError(null);
+      setIsOffline(false);
+      setIsStale(false);
+      dateRef.current = todayDateKey();
     } catch {
-      setError('failed_prayer_times');
+      if (cached) {
+        setError(null);
+        setIsOffline(true);
+      } else {
+        setError('failed_prayer_times');
+        setIsOffline(typeof navigator !== 'undefined' && !navigator.onLine);
+      }
     } finally {
       setLoading(false);
     }
@@ -37,6 +73,32 @@ export function usePrayerTimes(lat?: number, lng?: number) {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  useEffect(() => {
+    const onOnline = () => load();
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [load]);
+
+  useEffect(() => {
+    const checkDate = () => {
+      const today = todayDateKey();
+      if (today !== dateRef.current) {
+        dateRef.current = today;
+        load();
+      }
+    };
+    checkDate();
+    const id = setInterval(checkDate, 60_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') checkDate();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [load]);
 
   useEffect(() => {
@@ -67,5 +129,16 @@ export function usePrayerTimes(lat?: number, lng?: number) {
       })
     : [];
 
-  return { timings, hijri, countdown, nextPrayer, schedule, loading, error, reload: load };
+  return {
+    timings,
+    hijri,
+    countdown,
+    nextPrayer,
+    schedule,
+    loading,
+    error,
+    isOffline,
+    isStale,
+    reload: load,
+  };
 }

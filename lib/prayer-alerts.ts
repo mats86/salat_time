@@ -1,5 +1,6 @@
 import { isPwaInstalled } from '@/lib/biometric';
 import { getPrayerLabel } from '@/lib/i18n';
+import { cacheSchedulePayload, getCachedSchedulePayload } from '@/lib/offline-cache';
 import type { Lang, PrayerTimings } from '@/types';
 
 export type PrayerAlertName = 'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
@@ -183,13 +184,32 @@ export async function postScheduleToServiceWorker(
 ): Promise<void> {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
+  const payload = buildSchedulePayload(timings, lang);
+  cacheSchedulePayload(payload);
+
   const registration = await navigator.serviceWorker.ready;
   const worker = registration.active ?? navigator.serviceWorker.controller;
   if (!worker) return;
 
   worker.postMessage({
     type: 'SCHEDULE_PRAYERS',
-    payload: buildSchedulePayload(timings, lang),
+    payload,
+  });
+}
+
+export async function restorePrayerScheduleFromCache(): Promise<void> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+  const payload = getCachedSchedulePayload();
+  if (!payload) return;
+
+  const registration = await navigator.serviceWorker.ready;
+  const worker = registration.active ?? navigator.serviceWorker.controller;
+  if (!worker) return;
+
+  worker.postMessage({
+    type: 'SCHEDULE_PRAYERS',
+    payload,
   });
 }
 

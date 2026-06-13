@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { HomeHeader } from '@/components/layout/HomeHeader';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { OfflineBanner } from '@/components/layout/OfflineBanner';
 import { HomeDesktop } from '@/components/home/HomeDesktop';
 import { PrayerTimeHero } from '@/components/prayer/PrayerTimeHero';
 import { PrayerGrid } from '@/components/prayer/PrayerGrid';
@@ -27,14 +28,29 @@ export default function HomePage() {
     setManualLocation,
     source,
   } = useLocation();
-  const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading } =
+  const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading, isOffline: prayerOffline, isStale } =
     usePrayerTimes(coords?.lat, coords?.lng);
-  const { mosques, loading: mosquesLoading } = useNearbyMosques(coords?.lat, coords?.lng);
+  const { mosques, loading: mosquesLoading, isOffline: mosquesOffline } = useNearbyMosques(coords?.lat, coords?.lng);
   usePrayerAlerts(timings, lang);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [networkOffline, setNetworkOffline] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loading = locLoading || prayerLoading;
+
+  useEffect(() => {
+    const update = () => setNetworkOffline(!navigator.onLine);
+    update();
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
+
+  const showOfflineBanner =
+    networkOffline || prayerOffline || mosquesOffline || isStale;
 
   useEffect(() => {
     if (permissionDenied && !coords) {
@@ -72,6 +88,15 @@ export default function HomePage() {
 
   return (
     <>
+      {showOfflineBanner && (
+        <div className="fixed top-0 left-0 right-0 z-[60] md:pt-2 pointer-events-none">
+          <OfflineBanner
+            offline={networkOffline || prayerOffline || mosquesOffline}
+            stale={isStale}
+          />
+        </div>
+      )}
+
       {/* Desktop */}
       <HomeDesktop
         coordsLabel={coords?.label}

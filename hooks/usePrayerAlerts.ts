@@ -8,6 +8,7 @@ import {
   markPrayerFired,
   playAdhan,
   postScheduleToServiceWorker,
+  restorePrayerScheduleFromCache,
   wasPrayerFiredToday,
 } from '@/lib/prayer-alerts';
 import type { Lang } from '@/types';
@@ -18,6 +19,10 @@ export function usePrayerAlerts(timings: PrayerTimings | null, lang: Lang) {
     if (!timings) return;
     await postScheduleToServiceWorker(timings, lang);
   }, [timings, lang]);
+
+  useEffect(() => {
+    void restorePrayerScheduleFromCache();
+  }, []);
 
   useEffect(() => {
     syncSchedule();

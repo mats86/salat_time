@@ -3,6 +3,11 @@
 const prayerTimeouts = [];
 const firedToday = new Set();
 
+const DB_NAME = 'sz-offline';
+const DB_VERSION = 1;
+const STORE = 'schedule';
+const SCHEDULE_ID = 'prayer-schedule';
+
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -19,6 +24,40 @@ function getMsUntil(time) {
 function clearSchedules() {
   prayerTimeouts.forEach(clearTimeout);
   prayerTimeouts.length = 0;
+}
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveSchedule(payload) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(payload, SCHEDULE_ID);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function loadSchedule() {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).get(SCHEDULE_ID);
+    req.onsuccess = () => resolve(req.result ?? null);
+    req.onerror = () => reject(req.error);
+  });
 }
 
 async function hasVisibleClient() {
@@ -75,9 +114,26 @@ function schedulePrayers(payload) {
   }
 }
 
+async function restoreSchedule() {
+  const payload = await loadSchedule();
+  if (payload) schedulePrayers(payload);
+}
+
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    self.clients.claim().then(() => restoreSchedule())
+  );
+});
+
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SCHEDULE_PRAYERS') {
-    schedulePrayers(event.data.payload);
+    const payload = event.data.payload;
+    schedulePrayers(payload);
+    saveSchedule(payload).catch(() => {});
   }
 });
 

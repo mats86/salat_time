@@ -30,7 +30,7 @@ export async function fetchPrayerTimes(
 ): Promise<{ timings: PrayerTimings; hijri: HijriDate }> {
   const dateStr = format(new Date(), 'dd-MM-yyyy');
   const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`;
-  const res = await fetch(url, { next: { revalidate: 3600 } });
+  const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch prayer times');
   const json: AladhanResponse = await res.json();
   const raw = json.data.timings;
