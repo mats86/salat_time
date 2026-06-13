@@ -14,14 +14,14 @@ import { cn } from '@/lib/utils';
 
 interface PrayerAlertToggleProps {
   prayer: PrayerAlertName;
-  dimmed?: boolean;
+  isPast?: boolean;
   filled?: boolean;
   className?: string;
 }
 
 export function PrayerAlertToggle({
   prayer,
-  dimmed = false,
+  isPast = false,
   filled = false,
   className,
 }: PrayerAlertToggleProps) {
@@ -55,29 +55,30 @@ export function PrayerAlertToggle({
     }
 
     setPrayerAlertEnabled(prayer, next);
+
+    if (isPast) {
+      showHint(tr.alertForTomorrow);
+    }
   };
 
-  const icon = dimmed
-    ? 'notifications_off'
-    : enabled
-      ? 'notifications_active'
-      : 'notifications';
+  const icon = enabled ? 'notifications_active' : 'notifications';
 
   return (
     <span className="relative inline-flex">
       <button
         type="button"
         onClick={handleClick}
-        disabled={dimmed}
         aria-label={enabled ? tr.alertOn : tr.alertOff}
         aria-pressed={enabled}
         className={cn(
-          'material-symbols-outlined transition-colors',
-          dimmed
-            ? 'text-outline-variant cursor-default'
+          'material-symbols-outlined transition-colors cursor-pointer',
+          isPast
+            ? enabled
+              ? 'text-secondary/70 hover:text-secondary'
+              : 'text-on-surface-variant/70 hover:text-secondary'
             : enabled
-              ? 'text-secondary cursor-pointer'
-              : 'text-on-surface-variant cursor-pointer hover:text-secondary',
+              ? 'text-secondary'
+              : 'text-on-surface-variant hover:text-secondary',
           filled && enabled && 'material-symbols-filled',
           className
         )}

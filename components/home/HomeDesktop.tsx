@@ -275,7 +275,7 @@ export function HomeDesktop({
                         {isAlertPrayer(prayer.name) && (
                           <PrayerAlertToggle
                             prayer={prayer.name}
-                            dimmed={dimmed}
+                            isPast={dimmed}
                             className="text-sm"
                           />
                         )}

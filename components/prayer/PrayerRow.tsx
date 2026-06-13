@@ -77,7 +77,7 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
         {!isSunrise && (
           <PrayerAlertToggle
             prayer={prayer.name as PrayerAlertName}
-            dimmed={dimmed}
+            isPast={dimmed}
             className="text-sm"
           />
         )}
