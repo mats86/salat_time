@@ -7,9 +7,18 @@ const withPWA = require('next-pwa')({
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
   reloadOnOnline: true,
+  dynamicStartUrl: false,
+  fallbacks: {
+    document: '/offline.html',
+  },
+  navigateFallback: '/',
+  navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/admin\//, /^\/staff\//, /^\/mosque\//],
   additionalManifestEntries: [
+    { url: '/offline.html', revision: null },
     { url: '/sounds/adhan.mp3', revision: null },
     { url: '/icons/icon-192.png', revision: null },
+    { url: '/icons/icon-512.png', revision: null },
+    { url: '/manifest.json', revision: null },
   ],
   runtimeCaching: [
     {

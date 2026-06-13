@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="theme-color" content="#061f1a" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Salat Zeit — Offline</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #131313;
+        color: #e5e2e1;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 24px;
+        text-align: center;
+      }
+      main {
+        max-width: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+      }
+      img { border-radius: 20px; }
+      h1 { font-size: 1.5rem; font-weight: 600; color: #c9a84c; }
+      p { font-size: 0.95rem; line-height: 1.5; color: #a8a5a4; }
+      .sub { font-size: 0.85rem; }
+      button {
+        margin-top: 8px;
+        background: #c9a84c;
+        color: #131313;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:active { opacity: 0.9; }
+      .icon-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #b1ccc4;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" alt="" width="96" height="96" />
+      <h1>Salat Zeit</h1>
+      <div class="icon-row">
+        <span aria-hidden="true">☁</span>
+        <span id="status">Kein Internet</span>
+      </div>
+      <p id="hint">Gespeicherte Gebetszeiten werden geladen, sobald die App im Cache ist.</p>
+      <p class="sub">Öffne die App mindestens einmal mit Internet, damit sie offline funktioniert.</p>
+      <button type="button" id="open-app">App öffnen</button>
+    </main>
+    <script>
+      document.getElementById('open-app').addEventListener('click', function () {
+        window.location.href = '/';
+      });
+
+      async function tryCachedApp() {
+        if (!('caches' in window)) return;
+        try {
+          const cached = await caches.match('/', { ignoreSearch: true });
+          if (cached) {
+            window.location.replace('/');
+            return;
+          }
+          const keys = await caches.keys();
+          for (const key of keys) {
+            const match = await caches.open(key).then(function (c) {
+              return c.match('/', { ignoreSearch: true });
+            });
+            if (match) {
+              window.location.replace('/');
+              return;
+            }
+          }
+        } catch (e) {
+          /* stay on offline page */
+        }
+      }
+
+      window.addEventListener('online', function () {
+        document.getElementById('status').textContent = 'Wieder online';
+        window.location.replace('/');
+      });
+
+      tryCachedApp();
+    </script>
+  </body>
+</html>
