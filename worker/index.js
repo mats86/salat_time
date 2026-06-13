@@ -153,3 +153,80 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+const NAV_DENY = /^\/(api|auth|admin|staff|mosque)\//;
+const CACHE_PRIORITY = ['start-url', 'pages', 'others'];
+const OFFLINE_URL = '/offline.html';
+
+async function matchInCache(cacheName, request) {
+  const cache = await caches.open(cacheName);
+  return cache.match(request, { ignoreSearch: true });
+}
+
+async function findCachedNavigation(request) {
+  for (const name of CACHE_PRIORITY) {
+    const match = await matchInCache(name, request);
+    if (match) return match;
+  }
+
+  const keys = await caches.keys();
+  for (const name of keys) {
+    if (CACHE_PRIORITY.includes(name)) continue;
+    const cache = await caches.open(name);
+    const match = await cache.match(request, { ignoreSearch: true });
+    if (match) return match;
+  }
+
+  return null;
+}
+
+async function serveOfflinePage() {
+  const cached = await caches.match(OFFLINE_URL, { ignoreSearch: true });
+  if (cached) return cached;
+
+  const keys = await caches.keys();
+  for (const name of keys) {
+    const cache = await caches.open(name);
+    const match = await cache.match(OFFLINE_URL, { ignoreSearch: true });
+    if (match) return match;
+  }
+
+  return new Response(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Salat Zeit</title></head><body><p>Offline</p></body></html>',
+    { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+  );
+}
+
+async function handleNavigation(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok || response.type === 'opaqueredirect') {
+      if (response.redirected) {
+        return new Response(response.body, {
+          status: 200,
+          statusText: 'OK',
+          headers: response.headers,
+        });
+      }
+      return response;
+    }
+  } catch {
+    /* fall through to cache */
+  }
+
+  const cached = await findCachedNavigation(request);
+  if (cached) return cached;
+
+  return serveOfflinePage();
+}
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  if (event.request.mode !== 'navigate') return;
+
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  if (NAV_DENY.test(url.pathname)) return;
+
+  event.respondWith(handleNavigation(event.request));
+});

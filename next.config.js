@@ -7,11 +7,11 @@ const withPWA = require('next-pwa')({
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
   reloadOnOnline: true,
-  dynamicStartUrl: false,
+  dynamicStartUrl: true,
   fallbacks: {
     document: '/offline.html',
   },
-  navigateFallback: '/',
+  navigateFallback: '/offline.html',
   navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/admin\//, /^\/staff\//, /^\/mosque\//],
   additionalManifestEntries: [
     { url: '/offline.html', revision: null },
@@ -21,6 +21,19 @@ const withPWA = require('next-pwa')({
     { url: '/manifest.json', revision: null },
   ],
   runtimeCaching: [
+    {
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'pages',
+        networkTimeoutSeconds: 3,
+        expiration: {
+          maxEntries: 16,
+          maxAgeSeconds: 24 * 60 * 60,
+        },
+        matchOptions: { ignoreSearch: true },
+      },
+    },
     {
       urlPattern: /^https:\/\/api\.aladhan\.com\/v1\/timings\/.*/i,
       handler: 'StaleWhileRevalidate',

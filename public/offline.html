@@ -10,93 +10,219 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         min-height: 100dvh;
+        background: #0f2318;
+        color: #e8f5ee;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        padding: 20px 16px 32px;
+      }
+      .banner {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #131313;
-        color: #e5e2e1;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-        padding: 24px;
-        text-align: center;
+        gap: 8px;
+        background: rgba(201, 168, 76, 0.12);
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 20px;
+        font-size: 0.85rem;
+        color: #c9a84c;
       }
-      main {
+      header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+      header img { border-radius: 20px; margin-bottom: 12px; }
+      h1 { font-size: 1.5rem; font-weight: 600; color: #c9a84c; }
+      .location {
+        margin-top: 6px;
+        font-size: 0.85rem;
+        color: #a8d5b5;
+      }
+      .hijri {
+        margin-top: 4px;
+        font-size: 0.8rem;
+        color: #5fa87a;
+      }
+      .prayers {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .prayer-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #1a3a2a;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .prayer-name { font-size: 0.95rem; color: #e8f5ee; }
+      .prayer-name-ar { font-size: 0.8rem; color: #c9a84c; margin-top: 2px; }
+      .prayer-time {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #f0d080;
+        font-variant-numeric: tabular-nums;
+      }
+      .empty {
+        text-align: center;
+        color: #a8a5a4;
+        font-size: 0.9rem;
+        line-height: 1.5;
         max-width: 320px;
+        margin: 0 auto 20px;
+      }
+      .actions {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
+        margin-top: 28px;
       }
-      img { border-radius: 20px; }
-      h1 { font-size: 1.5rem; font-weight: 600; color: #c9a84c; }
-      p { font-size: 0.95rem; line-height: 1.5; color: #a8a5a4; }
-      .sub { font-size: 0.85rem; }
       button {
-        margin-top: 8px;
         background: #c9a84c;
-        color: #131313;
+        color: #0f2318;
         border: none;
         border-radius: 12px;
-        padding: 12px 24px;
+        padding: 12px 28px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
       }
       button:active { opacity: 0.9; }
-      .icon-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: #b1ccc4;
-        font-size: 0.9rem;
-      }
+      .sub { font-size: 0.8rem; color: #a8a5a4; text-align: center; }
     </style>
   </head>
   <body>
-    <main>
-      <img src="/icons/icon-192.png" alt="" width="96" height="96" />
-      <h1>Salat Zeit</h1>
-      <div class="icon-row">
-        <span aria-hidden="true">☁</span>
-        <span id="status">Kein Internet</span>
-      </div>
-      <p id="hint">Gespeicherte Gebetszeiten werden geladen, sobald die App im Cache ist.</p>
-      <p class="sub">Öffne die App mindestens einmal mit Internet, damit sie offline funktioniert.</p>
-      <button type="button" id="open-app">App öffnen</button>
-    </main>
-    <script>
-      document.getElementById('open-app').addEventListener('click', function () {
-        window.location.href = '/';
-      });
+    <div class="banner" id="banner">☁ Offline — gespeicherte Daten</div>
 
-      async function tryCachedApp() {
-        if (!('caches' in window)) return;
+    <header>
+      <img src="/icons/icon-192.png" alt="" width="72" height="72" />
+      <h1>Salat Zeit</h1>
+      <p class="location" id="location"></p>
+      <p class="hijri" id="hijri"></p>
+    </header>
+
+    <div class="prayers" id="prayers"></div>
+    <p class="empty" id="empty" hidden>
+      Keine gespeicherten Gebetszeiten gefunden. Öffne die App mindestens einmal mit Internet.
+    </p>
+
+    <div class="actions">
+      <button type="button" id="retry">Erneut versuchen</button>
+      <p class="sub">Die App synchronisiert sich automatisch, sobald du wieder online bist.</p>
+    </div>
+
+    <script>
+      var PRAYER_ORDER = ['Fajr', 'Sunrise', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+      var PRAYER_LABELS = {
+        Fajr: { de: 'Morgengebet', ar: 'الفجر' },
+        Sunrise: { de: 'Sonnenaufgang', ar: 'الشروق' },
+        Dhuhr: { de: 'Mittagsgebet', ar: 'الظهر' },
+        Asr: { de: 'Nachmittagsgebet', ar: 'العصر' },
+        Maghrib: { de: 'Abendgebet', ar: 'المغرب' },
+        Isha: { de: 'Nachtgebet', ar: 'العشاء' },
+      };
+      var PRAYER_PREFIX = 'sz_prayer_times_';
+      var LOCATION_KEY = 'salat_location_v2';
+
+      function todayDateKey() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function coordKey(lat, lng) {
+        return lat.toFixed(2) + '_' + lng.toFixed(2);
+      }
+
+      function loadLocation() {
         try {
-          const cached = await caches.match('/', { ignoreSearch: true });
-          if (cached) {
-            window.location.replace('/');
-            return;
-          }
-          const keys = await caches.keys();
-          for (const key of keys) {
-            const match = await caches.open(key).then(function (c) {
-              return c.match('/', { ignoreSearch: true });
-            });
-            if (match) {
-              window.location.replace('/');
-              return;
-            }
-          }
+          var raw = localStorage.getItem(LOCATION_KEY);
+          if (!raw) return null;
+          return JSON.parse(raw);
         } catch (e) {
-          /* stay on offline page */
+          return null;
         }
       }
 
+      function getCachedPrayerTimes(lat, lng) {
+        var date = todayDateKey();
+        var exactKey = PRAYER_PREFIX + coordKey(lat, lng) + '_' + date;
+        try {
+          var exact = localStorage.getItem(exactKey);
+          if (exact) return JSON.parse(exact);
+        } catch (e) { /* fall through */ }
+
+        var prefix = PRAYER_PREFIX + coordKey(lat, lng) + '_';
+        var latest = null;
+        for (var i = 0; i < localStorage.length; i++) {
+          var key = localStorage.key(i);
+          if (!key || key.indexOf(prefix) !== 0) continue;
+          try {
+            var entry = JSON.parse(localStorage.getItem(key));
+            if (!latest || entry.fetchedAt > latest.fetchedAt) {
+              latest = entry;
+            }
+          } catch (e) { /* skip */ }
+        }
+        return latest;
+      }
+
+      function renderPrayers(entry) {
+        var container = document.getElementById('prayers');
+        container.innerHTML = '';
+
+        PRAYER_ORDER.forEach(function (name) {
+          var time = entry.timings[name];
+          if (!time) return;
+
+          var labels = PRAYER_LABELS[name] || { de: name, ar: name };
+          var row = document.createElement('div');
+          row.className = 'prayer-row';
+          row.innerHTML =
+            '<div>' +
+              '<div class="prayer-name">' + labels.de + '</div>' +
+              '<div class="prayer-name-ar">' + labels.ar + '</div>' +
+            '</div>' +
+            '<div class="prayer-time">' + time + '</div>';
+          container.appendChild(row);
+        });
+      }
+
+      function init() {
+        var location = loadLocation();
+        var entry = null;
+
+        if (location) {
+          var label = location.label || (location.lat.toFixed(2) + '°, ' + location.lng.toFixed(2) + '°');
+          document.getElementById('location').textContent = label;
+          entry = getCachedPrayerTimes(location.lat, location.lng);
+        }
+
+        if (entry && entry.timings) {
+          if (entry.hijri) {
+            var hijriText = entry.hijri.day + '. ' + entry.hijri.month + ' ' + entry.hijri.year + ' AH';
+            document.getElementById('hijri').textContent = hijriText;
+          }
+          renderPrayers(entry);
+        } else {
+          document.getElementById('empty').hidden = false;
+        }
+      }
+
+      document.getElementById('retry').addEventListener('click', function () {
+        window.location.href = '/';
+      });
+
       window.addEventListener('online', function () {
-        document.getElementById('status').textContent = 'Wieder online';
+        document.getElementById('banner').textContent = '✓ Wieder online';
         window.location.replace('/');
       });
 
-      tryCachedApp();
+      init();
     </script>
   </body>
 </html>
