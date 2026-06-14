@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Libre_Caslon_Text, Inter, Amiri } from 'next/font/google';
 import { LangProvider } from '@/components/providers/LangProvider';
 import { CacheWarmup } from '@/components/layout/CacheWarmup';
+import { ServiceWorkerBootstrap } from '@/components/layout/ServiceWorkerBootstrap';
 import './globals.css';
 
 const libreCaslon = Libre_Caslon_Text({
@@ -62,6 +63,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <LangProvider>
+          <ServiceWorkerBootstrap />
           <CacheWarmup />
           {children}
         </LangProvider>
