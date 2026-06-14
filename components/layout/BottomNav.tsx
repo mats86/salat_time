@@ -16,7 +16,7 @@ export function BottomNav() {
     update();
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
-  }, []);
+  }, [pathname]);
 
   const items = [
     {

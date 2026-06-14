@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Libre_Caslon_Text, Inter, Amiri } from 'next/font/google';
 import { LangProvider } from '@/components/providers/LangProvider';
 import { CacheWarmup } from '@/components/layout/CacheWarmup';
+import { LegacyHashRedirect } from '@/components/layout/LegacyHashRedirect';
 import { ServiceWorkerBootstrap } from '@/components/layout/ServiceWorkerBootstrap';
 import './globals.css';
 
@@ -61,6 +62,7 @@ export default function RootLayout({
         <LangProvider>
           <ServiceWorkerBootstrap />
           <CacheWarmup />
+          <LegacyHashRedirect />
           {children}
         </LangProvider>
       </body>
