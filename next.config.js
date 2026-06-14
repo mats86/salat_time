@@ -14,6 +14,7 @@ const withPWA = require('next-pwa')({
   },
   navigateFallback: '/offline.html',
   navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/admin\//, /^\/staff\//, /^\/mosque\//],
+  buildExcludes: [/app-build-manifest\.json$/],
   additionalManifestEntries: [
     { url: '/offline.html', revision: null },
     { url: '/sounds/adhan.mp3', revision: null },
