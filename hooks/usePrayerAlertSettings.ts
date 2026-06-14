@@ -1,10 +1,18 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getPrayerAlertSettings, type PrayerAlertSettings } from '@/lib/prayer-alerts';
+import { getPrayerAlertSettings, PRAYER_ALERT_NAMES, type PrayerAlertName, type PrayerAlertSettings } from '@/lib/prayer-alerts';
+
+const DEFAULT_SETTINGS: PrayerAlertSettings = {
+  masterEnabled: false,
+  prayers: Object.fromEntries(PRAYER_ALERT_NAMES.map((p) => [p, false])) as Record<
+    PrayerAlertName,
+    boolean
+  >,
+};
 
 export function usePrayerAlertSettings() {
-  const [settings, setSettings] = useState<PrayerAlertSettings>(() => getPrayerAlertSettings());
+  const [settings, setSettings] = useState<PrayerAlertSettings>(DEFAULT_SETTINGS);
 
   const refresh = useCallback(() => {
     setSettings(getPrayerAlertSettings());

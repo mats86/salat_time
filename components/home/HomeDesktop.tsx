@@ -14,6 +14,7 @@ import {
 import { PrayerAlertToggle } from '@/components/prayer/PrayerAlertToggle';
 import type { PrayerAlertName } from '@/lib/prayer-alerts';
 import { cn, formatCountdownShort, formatTime12 } from '@/lib/utils';
+import { useMounted } from '@/hooks/useMounted';
 import type { HijriDate, Lang, MergedPrayerTime, Mosque, PrayerName } from '@/types';
 
 function isAlertPrayer(name: PrayerName): name is PrayerAlertName {
@@ -63,6 +64,7 @@ export function HomeDesktop({
   onOpenLocation,
 }: HomeDesktopProps) {
   const { lang, setLang, tr } = useLang();
+  const mounted = useMounted();
   const brandName = getAppBrandName(lang);
   const langIndex = langs.indexOf(lang);
 
@@ -81,13 +83,17 @@ export function HomeDesktop({
     ? `${hijri.day} ${hijri.month} ${hijri.year} ${tr.hijriSuffix}`
     : `14 Ramadān 1445 ${tr.hijriSuffix}`;
 
-  const gregorianLabel = format(new Date(), 'EEEE, d MMMM yyyy', {
-    locale: DATE_LOCALES[lang],
-  });
+  const gregorianLabel = mounted
+    ? format(new Date(), 'EEEE, d MMMM yyyy', {
+        locale: DATE_LOCALES[lang],
+      })
+    : '';
 
-  const calendarSub = hijri
-    ? `${format(new Date(), 'MMMM', { locale: DATE_LOCALES[lang] }).toUpperCase()} – ${hijri.month.toUpperCase()}`
-    : format(new Date(), 'MMMM yyyy', { locale: DATE_LOCALES[lang] }).toUpperCase();
+  const calendarSub = mounted
+    ? hijri
+      ? `${format(new Date(), 'MMMM', { locale: DATE_LOCALES[lang] }).toUpperCase()} – ${hijri.month.toUpperCase()}`
+      : format(new Date(), 'MMMM yyyy', { locale: DATE_LOCALES[lang] }).toUpperCase()
+    : '';
 
   const nextJamaahPrayer = schedule.find((p) => !p.isPast && p.name !== 'Sunrise');
   const jamaahLabel = nextJamaahPrayer

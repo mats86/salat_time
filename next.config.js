@@ -52,6 +52,17 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  headers: async () => [
+    {
+      source: '/',
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'private, no-cache, no-store, must-revalidate',
+        },
+      ],
+    },
+  ],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'directus.alattas.de' },

@@ -125,7 +125,16 @@ self.addEventListener('install', () => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    self.clients.claim().then(() => restoreSchedule())
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys
+          .filter((name) => name === 'start-url' || name === 'pages')
+          .map((name) => caches.delete(name))
+      );
+      await self.clients.claim();
+      await restoreSchedule();
+    })()
   );
 });
 

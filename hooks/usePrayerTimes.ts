@@ -15,6 +15,7 @@ import {
   todayDateKey,
 } from '@/lib/offline-cache';
 import type { HijriDate, PrayerTimings, PrayerName, MergedPrayerTime } from '@/types';
+import { useMounted } from '@/hooks/useMounted';
 
 function applyPrayerData(
   data: { timings: PrayerTimings; hijri: HijriDate },
@@ -28,6 +29,7 @@ function applyPrayerData(
 }
 
 export function usePrayerTimes(lat?: number, lng?: number) {
+  const mounted = useMounted();
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
   const [hijri, setHijri] = useState<HijriDate | null>(null);
   const [countdown, setCountdown] = useState('');
@@ -114,17 +116,21 @@ export function usePrayerTimes(lat?: number, lng?: number) {
 
   const schedule: MergedPrayerTime[] = timings
     ? PRAYER_ORDER.map((name) => {
-        const now = new Date();
-        const [h, m] = timings[name].split(':').map(Number);
-        const prayerTime = new Date();
-        prayerTime.setHours(h, m, 0, 0);
         const isCurrent = nextPrayer?.name === name;
+        let isPast = false;
+        if (mounted) {
+          const now = new Date();
+          const [h, m] = timings[name].split(':').map(Number);
+          const prayerTime = new Date();
+          prayerTime.setHours(h, m, 0, 0);
+          isPast = prayerTime < now && !isCurrent;
+        }
         return {
           name,
           time: timings[name],
           isCustom: false,
           isCurrent,
-          isPast: prayerTime < now && !isCurrent,
+          isPast,
         };
       })
     : [];

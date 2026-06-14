@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { format } from 'date-fns';
 import { de, ar, enUS } from 'date-fns/locale';
 import { useLang } from '@/components/providers/LangProvider';
+import { useMounted } from '@/hooks/useMounted';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
 import {
   getAppBrandName,
@@ -103,6 +104,7 @@ export function MosqueDetailClient({
   events,
 }: MosqueDetailClientProps) {
   const { lang, setLang, tr } = useLang();
+  const mounted = useMounted();
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const brandName = getAppBrandName(lang);
   const name = getMosqueName(mosque, lang);
@@ -143,8 +145,12 @@ export function MosqueDetailClient({
       : null;
 
   const addressLine = [mosque.address, mosque.city].filter(Boolean).join(', ');
-  const todayLabelDesktop = format(new Date(), 'EEEE, d MMM', { locale: DATE_LOCALES[lang] });
-  const todayLabelMobile = format(new Date(), 'MMMM d, yyyy', { locale: DATE_LOCALES[lang] });
+  const todayLabelDesktop = mounted
+    ? format(new Date(), 'EEEE, d MMM', { locale: DATE_LOCALES[lang] })
+    : '';
+  const todayLabelMobile = mounted
+    ? format(new Date(), 'MMMM d, yyyy', { locale: DATE_LOCALES[lang] })
+    : '';
   const currentPrayer = timings ? getCurrentPrayer(timings) : null;
 
   const mergedPrayers = PRAYER_ROWS.map((prayerName) => {
