@@ -505,7 +505,7 @@ export function MosqueDetailClient({
             <span className="font-label-caps text-label-caps">{tr.mosques}</span>
           </Link>
           <Link
-            href="/#qibla"
+            href="/qibla"
             className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined mb-1">explore</span>

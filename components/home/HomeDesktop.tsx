@@ -122,7 +122,7 @@ export function HomeDesktop({
             {tr.mosques}
           </a>
           <a
-            href="#qibla"
+            href="/qibla"
             className="font-title-md text-title-md text-on-surface-variant hover:text-secondary transition-colors duration-300 active:scale-95 transition-transform"
           >
             {tr.qibla}
