@@ -1,6 +1,7 @@
 const START_URL_CACHE = 'start-url';
 const PAGES_CACHE = 'pages';
 const OFFLINE_URL = '/offline.html';
+const MATERIAL_SYMBOLS_FONT = '/fonts/material-symbols-outlined.ttf';
 
 async function storeInCache(
   cacheName: string,
@@ -51,6 +52,13 @@ export async function warmupNavigationCache(): Promise<void> {
     );
     const offlineResponse = await fetch(offlineRequest);
     await storeInCache(PAGES_CACHE, offlineRequest, offlineResponse);
+
+    const fontRequest = new Request(
+      new URL(MATERIAL_SYMBOLS_FONT, window.location.origin).href,
+      { credentials: 'same-origin' }
+    );
+    const fontResponse = await fetch(fontRequest);
+    await storeInCache('static-font-assets', fontRequest, fontResponse);
 
     const currentPath = window.location.pathname;
     if (currentPath && currentPath !== '/') {

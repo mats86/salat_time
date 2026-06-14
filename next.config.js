@@ -17,6 +17,7 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/app-build-manifest\.json$/],
   additionalManifestEntries: [
     { url: '/offline.html', revision: null },
+    { url: '/fonts/material-symbols-outlined.ttf', revision: null },
     { url: '/sounds/adhan.mp3', revision: null },
     { url: '/icons/icon-192.png', revision: null },
     { url: '/icons/icon-512.png', revision: null },

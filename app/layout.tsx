@@ -53,10 +53,6 @@ export default function RootLayout({
     >
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
-        />
       </head>
       <body
         className="font-body-lg antialiased bg-background text-on-surface"
