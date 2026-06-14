@@ -124,18 +124,7 @@ self.addEventListener('install', () => {
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      const keys = await caches.keys();
-      await Promise.all(
-        keys
-          .filter((name) => name === 'start-url' || name === 'pages')
-          .map((name) => caches.delete(name))
-      );
-      await self.clients.claim();
-      await restoreSchedule();
-    })()
-  );
+  event.waitUntil(self.clients.claim().then(() => restoreSchedule()));
 });
 
 self.addEventListener('message', (event) => {
@@ -166,10 +155,64 @@ self.addEventListener('notificationclick', (event) => {
 const NAV_DENY = /^\/(api|auth|admin|staff|mosque)\//;
 const CACHE_PRIORITY = ['start-url', 'pages', 'others'];
 const OFFLINE_URL = '/offline.html';
-const NETWORK_TIMEOUT_MS = 2000;
+const NETWORK_TIMEOUT_MS = 1500;
 
 function isDocumentRequest(request) {
-  return request.mode === 'navigate' || request.destination === 'document';
+  if (request.mode === 'navigate' || request.destination === 'document') return true;
+  const accept = request.headers.get('accept') || '';
+  return accept.includes('text/html');
+}
+
+function navigationUrls(request) {
+  const parsed = new URL(request.url);
+  const urls = [request.url, parsed.origin + parsed.pathname];
+  if (parsed.pathname === '/' || parsed.pathname === '') {
+    urls.push(parsed.origin + '/');
+  }
+  return [...new Set(urls)];
+}
+
+async function matchUrlInCache(cacheName, urls) {
+  const cache = await caches.open(cacheName);
+  for (const url of urls) {
+    const match = await cache.match(url, { ignoreSearch: true });
+    if (match) return match;
+  }
+  return null;
+}
+
+async function findCachedNavigation(request) {
+  const urls = navigationUrls(request);
+
+  for (const name of CACHE_PRIORITY) {
+    const match = await matchUrlInCache(name, urls);
+    if (match) return match;
+  }
+
+  const keys = await caches.keys();
+  for (const name of keys) {
+    if (CACHE_PRIORITY.includes(name)) continue;
+    const match = await matchUrlInCache(name, urls);
+    if (match) return match;
+  }
+
+  return null;
+}
+
+async function updateNavigationCache(request, response) {
+  try {
+    const cache = await caches.open('pages');
+    const toStore = response.redirected
+      ? new Response(response.body, {
+          status: 200,
+          statusText: 'OK',
+          headers: response.headers,
+        })
+      : response.clone();
+    await cache.put(request, toStore);
+  } catch {
+    /* best-effort */
+  }
 }
 
 async function fetchWithTimeout(request, timeoutMs) {
@@ -181,28 +224,6 @@ async function fetchWithTimeout(request, timeoutMs) {
   } finally {
     clearTimeout(timeoutId);
   }
-}
-
-async function matchInCache(cacheName, request) {
-  const cache = await caches.open(cacheName);
-  return cache.match(request, { ignoreSearch: true });
-}
-
-async function findCachedNavigation(request) {
-  for (const name of CACHE_PRIORITY) {
-    const match = await matchInCache(name, request);
-    if (match) return match;
-  }
-
-  const keys = await caches.keys();
-  for (const name of keys) {
-    if (CACHE_PRIORITY.includes(name)) continue;
-    const cache = await caches.open(name);
-    const match = await cache.match(request, { ignoreSearch: true });
-    if (match) return match;
-  }
-
-  return null;
 }
 
 async function serveOfflinePage() {
@@ -223,9 +244,22 @@ async function serveOfflinePage() {
 }
 
 async function handleNavigation(request) {
+  const cached = await findCachedNavigation(request);
+  if (cached) {
+    fetchWithTimeout(request, NETWORK_TIMEOUT_MS)
+      .then((response) => {
+        if (response.ok || response.type === 'opaqueredirect') {
+          return updateNavigationCache(request, response);
+        }
+      })
+      .catch(() => {});
+    return cached;
+  }
+
   try {
     const response = await fetchWithTimeout(request, NETWORK_TIMEOUT_MS);
     if (response.ok || response.type === 'opaqueredirect') {
+      await updateNavigationCache(request, response);
       if (response.redirected) {
         return new Response(response.body, {
           status: 200,
@@ -236,11 +270,8 @@ async function handleNavigation(request) {
       return response;
     }
   } catch {
-    /* fall through to cache */
+    /* offline */
   }
-
-  const cached = await findCachedNavigation(request);
-  if (cached) return cached;
 
   return serveOfflinePage();
 }

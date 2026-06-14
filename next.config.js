@@ -7,7 +7,8 @@ const withPWA = require('next-pwa')({
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
   reloadOnOnline: true,
-  dynamicStartUrl: true,
+  dynamicStartUrl: false,
+  navigationPreload: false,
   fallbacks: {
     document: '/offline.html',
   },
@@ -24,10 +25,9 @@ const withPWA = require('next-pwa')({
     {
       urlPattern: ({ request }) =>
         request.mode === 'navigate' || request.destination === 'document',
-      handler: 'NetworkFirst',
+      handler: 'CacheFirst',
       options: {
         cacheName: 'pages',
-        networkTimeoutSeconds: 1,
         expiration: {
           maxEntries: 16,
           maxAgeSeconds: 24 * 60 * 60,

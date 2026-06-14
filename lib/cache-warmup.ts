@@ -1,5 +1,6 @@
 const START_URL_CACHE = 'start-url';
 const PAGES_CACHE = 'pages';
+const OFFLINE_URL = '/offline.html';
 
 async function storeInCache(
   cacheName: string,
@@ -20,18 +21,36 @@ async function storeInCache(
   await cache.put(request, toStore);
 }
 
+async function ensureServiceWorkerReady(): Promise<void> {
+  if (!('serviceWorker' in navigator)) return;
+
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (!registration) return;
+
+  await registration.update().catch(() => {});
+  await navigator.serviceWorker.ready;
+}
+
 export async function warmupNavigationCache(): Promise<void> {
   if (typeof window === 'undefined') return;
   if (!navigator.onLine) return;
   if (!('serviceWorker' in navigator) || !('caches' in window)) return;
 
   try {
-    await navigator.serviceWorker.ready;
+    await ensureServiceWorkerReady();
 
     const rootUrl = new URL('/', window.location.origin).href;
     const rootRequest = new Request(rootUrl, { credentials: 'same-origin' });
     const rootResponse = await fetch(rootRequest);
     await storeInCache(START_URL_CACHE, rootRequest, rootResponse);
+    await storeInCache(PAGES_CACHE, rootRequest, rootResponse);
+
+    const offlineRequest = new Request(
+      new URL(OFFLINE_URL, window.location.origin).href,
+      { credentials: 'same-origin' }
+    );
+    const offlineResponse = await fetch(offlineRequest);
+    await storeInCache(PAGES_CACHE, offlineRequest, offlineResponse);
 
     const currentPath = window.location.pathname;
     if (currentPath && currentPath !== '/') {
