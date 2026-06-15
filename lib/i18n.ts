@@ -124,6 +124,10 @@ export const translations = {
     calcMethodUmmAlQura: 'Umm al-Qura University, Makkah',
     calcMethodKarachi: 'University of Islamic Sciences, Karachi',
     calcMethodMWLDesc: 'Häufig in Europa, Fernost und Teilen der USA verwendet.',
+    calcMethodISNADesc: 'Verbreitet in Nordamerika und Kanada.',
+    calcMethodEgyptDesc: 'Offizielle Methode Ägyptens und mehrerer afrikanischer Länder.',
+    calcMethodUmmAlQuraDesc: 'Offizielle Methode Saudi-Arabiens (festes Isha-Offset).',
+    calcMethodKarachiDesc: 'Verbreitet in Pakistan, Indien und Bangladesch.',
     asrStandardDesc: 'Einfache Schattenlängen-Berechnung.',
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Doppelte Schattenlängen-Berechnung.',
@@ -397,6 +401,10 @@ export const translations = {
     calcMethodUmmAlQura: 'جامعة أم القرى، مكة',
     calcMethodKarachi: 'جامعة العلوم الإسلامية، كراتشي',
     calcMethodMWLDesc: 'شائع الاستخدام في أوروبا والشرق الأقصى وأجزاء من الولايات المتحدة.',
+    calcMethodISNADesc: 'شائع في أمريكا الشمالية وكندا.',
+    calcMethodEgyptDesc: 'الطريقة الرسمية في مصر وعدة دول أفريقية.',
+    calcMethodUmmAlQuraDesc: 'الطريقة الرسمية في السعودية (إزاحة ثابتة للعشاء).',
+    calcMethodKarachiDesc: 'شائع في باكستان والهند وبنغلاديش.',
     asrStandardDesc: 'حساب بطول ظل واحد.',
     asrHanafi: 'حنفي',
     asrHanafiDesc: 'حساب بطول ظل مضاعف.',
@@ -666,6 +674,10 @@ export const translations = {
     calcMethodUmmAlQura: 'Umm al-Qura University, Makkah',
     calcMethodKarachi: 'University of Islamic Sciences, Karachi',
     calcMethodMWLDesc: 'Commonly used in Europe, Far East and parts of the USA.',
+    calcMethodISNADesc: 'Widely used in North America and Canada.',
+    calcMethodEgyptDesc: 'Official method for Egypt and several African countries.',
+    calcMethodUmmAlQuraDesc: 'Official method for Saudi Arabia (fixed Isha offset).',
+    calcMethodKarachiDesc: 'Common in Pakistan, India and Bangladesh.',
     asrStandardDesc: 'Single shadow length calculation.',
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Double shadow length calculation.',
@@ -869,4 +881,33 @@ export function getStoredLanguage(): Lang {
   const stored = localStorage.getItem('lang');
   if (stored === 'ar' || stored === 'en' || stored === 'de') return stored;
   return 'de';
+}
+
+export function getCalcMethodLabel(lang: Lang, methodId: number): string {
+  const tr = t(lang);
+  const labels: Record<number, string> = {
+    3: tr.calcMethodMWL,
+    2: tr.calcMethodISNA,
+    5: tr.calcMethodEgypt,
+    4: tr.calcMethodUmmAlQura,
+    1: tr.calcMethodKarachi,
+  };
+  return labels[methodId] ?? tr.calcMethodMWL;
+}
+
+export function getCalcMethodDesc(lang: Lang, methodId: number): string {
+  const tr = t(lang);
+  const descs: Record<number, string> = {
+    3: tr.calcMethodMWLDesc,
+    2: tr.calcMethodISNADesc,
+    5: tr.calcMethodEgyptDesc,
+    4: tr.calcMethodUmmAlQuraDesc,
+    1: tr.calcMethodKarachiDesc,
+  };
+  return descs[methodId] ?? tr.calcMethodMWLDesc;
+}
+
+export function getAsrSchoolLabel(lang: Lang, school: 'standard' | 'hanafi'): string {
+  const tr = t(lang);
+  return school === 'hanafi' ? tr.asrHanafi : tr.asrJuristicStandard;
 }

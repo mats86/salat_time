@@ -1,4 +1,5 @@
 import type { SchedulePrayerPayload } from '@/lib/prayer-alerts';
+import type { AsrSchool } from '@/lib/calc-settings';
 import type { HijriDate, Mosque, PrayerTimings } from '@/types';
 
 const PRAYER_PREFIX = 'sz_prayer_times_';
@@ -29,8 +30,18 @@ export function isSameDayCache(dateStr: string): boolean {
   return dateStr === todayDateKey();
 }
 
-function prayerKey(lat: number, lng: number, date: string): string {
-  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${date}`;
+function prayerKey(
+  lat: number,
+  lng: number,
+  date: string,
+  method: number,
+  school: AsrSchool
+): string {
+  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_${date}`;
+}
+
+function prayerPrefix(lat: number, lng: number, method: number, school: AsrSchool): string {
+  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_`;
 }
 
 function mosquesKey(lat: number, lng: number): string {
@@ -41,7 +52,9 @@ export function cachePrayerTimes(
   lat: number,
   lng: number,
   data: { timings: PrayerTimings; hijri: HijriDate },
-  date = todayDateKey()
+  date = todayDateKey(),
+  method = 3,
+  school: AsrSchool = 'standard'
 ): void {
   if (typeof window === 'undefined') return;
   const entry: CachedPrayerTimes = {
@@ -50,17 +63,19 @@ export function cachePrayerTimes(
     date,
     fetchedAt: new Date().toISOString(),
   };
-  localStorage.setItem(prayerKey(lat, lng, date), JSON.stringify(entry));
+  localStorage.setItem(prayerKey(lat, lng, date, method, school), JSON.stringify(entry));
 }
 
 export function getCachedPrayerTimes(
   lat: number,
   lng: number,
-  date = todayDateKey()
+  date = todayDateKey(),
+  method = 3,
+  school: AsrSchool = 'standard'
 ): CachedPrayerTimes | null {
   if (typeof window === 'undefined') return null;
 
-  const exact = localStorage.getItem(prayerKey(lat, lng, date));
+  const exact = localStorage.getItem(prayerKey(lat, lng, date, method, school));
   if (exact) {
     try {
       return JSON.parse(exact) as CachedPrayerTimes;
@@ -69,7 +84,7 @@ export function getCachedPrayerTimes(
     }
   }
 
-  const prefix = `${PRAYER_PREFIX}${coordKey(lat, lng)}_`;
+  const prefix = prayerPrefix(lat, lng, method, school);
   let latest: CachedPrayerTimes | null = null;
 
   for (let i = 0; i < localStorage.length; i++) {

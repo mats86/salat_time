@@ -1,9 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import type { Lang } from '@/types';
 import { useLang } from '@/components/providers/LangProvider';
-import { getPrayerLabel } from '@/lib/i18n';
+import { getPrayerLabel, getCalcMethodLabel, getAsrSchoolLabel } from '@/lib/i18n';
 import { PRAYER_ALERT_NAMES } from '@/lib/prayer-alerts';
+import {
+  CALC_METHOD_OPTIONS,
+  setAsrSchool,
+  setCalcMethod,
+  type AsrSchool,
+} from '@/lib/calc-settings';
+import { useCalcSettings } from '@/hooks/useCalcSettings';
 import { SettingsPrayerToggle } from '@/components/settings/SettingsPrayerToggle';
 import { cn } from '@/lib/utils';
 
@@ -25,8 +33,16 @@ const PRAYER_ICONS: Record<string, string> = {
 
 export function SettingsMobile() {
   const { lang, setLang, tr } = useLang();
+  const { settings } = useCalcSettings();
+  const [methodExpanded, setMethodExpanded] = useState(false);
 
-  const calculationMethod = tr.calculationMethodMWL;
+  const methodLabel = getCalcMethodLabel(lang, settings.method);
+  const asrLabel = getAsrSchoolLabel(lang, settings.school);
+
+  const toggleAsrSchool = () => {
+    const next: AsrSchool = settings.school === 'standard' ? 'hanafi' : 'standard';
+    setAsrSchool(next);
+  };
 
   return (
     <main className="pt-20 px-margin-mobile max-w-2xl mx-auto space-y-stack-lg pb-24">
@@ -60,20 +76,60 @@ export function SettingsMobile() {
           {tr.settingsPrayerCalculation}
         </h2>
         <div className="settings-glass-card rounded-xl overflow-hidden divide-y divide-white/5">
-          <div className="p-4 flex items-center justify-between settings-gold-glow transition-all group">
+          <button
+            type="button"
+            onClick={() => setMethodExpanded((open) => !open)}
+            className="w-full p-4 flex items-center justify-between settings-gold-glow transition-all group text-left"
+          >
             <div className="flex flex-col">
               <span className="font-title-md text-on-surface">{tr.calculationMethod}</span>
-              <span className="text-xs text-on-surface-variant">{calculationMethod}</span>
+              <span className="text-xs text-on-surface-variant">{methodLabel}</span>
             </div>
-            <span className="material-symbols-outlined text-secondary opacity-60">expand_more</span>
-          </div>
-          <div className="p-4 flex items-center justify-between settings-gold-glow transition-all">
+            <span
+              className={cn(
+                'material-symbols-outlined text-secondary opacity-60 transition-transform',
+                methodExpanded && 'rotate-180'
+              )}
+            >
+              expand_more
+            </span>
+          </button>
+          {methodExpanded && (
+            <div className="bg-surface-container-low/40 divide-y divide-white/5">
+              {CALC_METHOD_OPTIONS.map((option) => {
+                const selected = settings.method === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => {
+                      setCalcMethod(option.id);
+                      setMethodExpanded(false);
+                    }}
+                    className={cn(
+                      'w-full px-4 py-3 text-left transition-colors',
+                      selected
+                        ? 'bg-secondary/15 text-secondary'
+                        : 'text-on-surface-variant hover:bg-white/5'
+                    )}
+                  >
+                    <span className="text-sm font-title-md">{tr[option.labelKey]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={toggleAsrSchool}
+            className="w-full p-4 flex items-center justify-between settings-gold-glow transition-all text-left"
+          >
             <div className="flex flex-col">
               <span className="font-title-md text-on-surface">{tr.asrJuristicMethod}</span>
-              <span className="text-xs text-on-surface-variant">{tr.asrJuristicStandard}</span>
+              <span className="text-xs text-on-surface-variant">{asrLabel}</span>
             </div>
             <span className="material-symbols-outlined text-secondary opacity-60">chevron_right</span>
-          </div>
+          </button>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { asrSchoolToApi, type AsrSchool } from '@/lib/calc-settings';
 import type { HijriDate, PrayerTimings, PrayerName } from '@/types';
 
 export const PRAYER_ORDER: PrayerName[] = [
@@ -26,10 +27,12 @@ export interface AladhanResponse {
 export async function fetchPrayerTimes(
   lat: number,
   lng: number,
-  method = Number(process.env.NEXT_PUBLIC_ALADHAN_METHOD) || 3
+  method = Number(process.env.NEXT_PUBLIC_ALADHAN_METHOD) || 3,
+  school: AsrSchool = 'standard'
 ): Promise<{ timings: PrayerTimings; hijri: HijriDate }> {
   const dateStr = format(new Date(), 'dd-MM-yyyy');
-  const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`;
+  const schoolParam = asrSchoolToApi(school);
+  const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${schoolParam}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch prayer times');
   const json: AladhanResponse = await res.json();

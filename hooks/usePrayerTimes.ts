@@ -8,6 +8,7 @@ import {
   formatCountdown,
   PRAYER_ORDER,
 } from '@/lib/aladhan';
+import { getCalcSettings } from '@/lib/calc-settings';
 import {
   cachePrayerTimes,
   getCachedPrayerTimes,
@@ -43,7 +44,8 @@ export function usePrayerTimes(lat?: number, lng?: number) {
   const load = useCallback(async () => {
     if (lat == null || lng == null) return;
 
-    const cached = getCachedPrayerTimes(lat, lng);
+    const { method, school } = getCalcSettings();
+    const cached = getCachedPrayerTimes(lat, lng, todayDateKey(), method, school);
     if (cached) {
       applyPrayerData(cached, setTimings, setHijri, setNextPrayer);
       setIsStale(!isSameDayCache(cached.date));
@@ -53,8 +55,8 @@ export function usePrayerTimes(lat?: number, lng?: number) {
     }
 
     try {
-      const data = await fetchPrayerTimes(lat, lng);
-      cachePrayerTimes(lat, lng, data);
+      const data = await fetchPrayerTimes(lat, lng, method, school);
+      cachePrayerTimes(lat, lng, data, todayDateKey(), method, school);
       applyPrayerData(data, setTimings, setHijri, setNextPrayer);
       setError(null);
       setIsOffline(false);
@@ -75,6 +77,12 @@ export function usePrayerTimes(lat?: number, lng?: number) {
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  useEffect(() => {
+    const onCalcSettingsChanged = () => load();
+    window.addEventListener('calc-settings-changed', onCalcSettingsChanged);
+    return () => window.removeEventListener('calc-settings-changed', onCalcSettingsChanged);
   }, [load]);
 
   useEffect(() => {

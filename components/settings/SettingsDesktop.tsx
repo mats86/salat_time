@@ -5,9 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Lang } from '@/types';
 import { useLang } from '@/components/providers/LangProvider';
-import { getAppBrandName, getPrayerLabel } from '@/lib/i18n';
+import { getAppBrandName, getPrayerLabel, getCalcMethodDesc } from '@/lib/i18n';
 import { SettingsDesktopNotificationRow } from '@/components/settings/SettingsDesktopNotificationRow';
 import { resetAllPrayerAlerts } from '@/lib/prayer-alerts';
+import { CALC_METHOD_OPTIONS, setAsrSchool, setCalcMethod } from '@/lib/calc-settings';
+import { useCalcSettings } from '@/hooks/useCalcSettings';
 import { cn } from '@/lib/utils';
 
 const APP_VERSION = '2.4.0';
@@ -37,20 +39,16 @@ const LANG_CARDS: {
   { code: 'ar', display: 'العربية', labelKey: 'langArabicLabel' },
 ];
 
-const CALCULATION_METHODS = [
-  'calcMethodMWL',
-  'calcMethodISNA',
-  'calcMethodEgypt',
-  'calcMethodUmmAlQura',
-  'calcMethodKarachi',
-] as const;
+const CALCULATION_METHODS = CALC_METHOD_OPTIONS;
 
 export function SettingsDesktop() {
   const { lang, setLang, tr } = useLang();
   const brandName = getAppBrandName(lang);
   const [activeSection, setActiveSection] = useState('general');
-  const [asrMethod, setAsrMethod] = useState<'standard' | 'hanafi'>('standard');
-  const [calcMethod, setCalcMethod] = useState(0);
+  const { settings } = useCalcSettings();
+
+  const calcMethodIndex = CALCULATION_METHODS.findIndex((m) => m.id === settings.method);
+  const selectedCalcIndex = calcMethodIndex >= 0 ? calcMethodIndex : 0;
 
   const cycleLang = () => {
     const idx = langs.indexOf(lang);
@@ -233,13 +231,16 @@ export function SettingsDesktop() {
                 </label>
                 <div className="relative">
                   <select
-                    value={calcMethod}
-                    onChange={(e) => setCalcMethod(Number(e.target.value))}
+                    value={selectedCalcIndex}
+                    onChange={(e) => {
+                      const option = CALCULATION_METHODS[Number(e.target.value)];
+                      if (option) setCalcMethod(option.id);
+                    }}
                     className="w-full bg-surface-container-low border-b-2 border-primary/30 text-on-surface py-3 px-4 focus:border-secondary focus:ring-0 transition-all appearance-none cursor-pointer rounded-lg"
                   >
-                    {CALCULATION_METHODS.map((key, i) => (
-                      <option key={key} value={i}>
-                        {tr[key]}
+                    {CALCULATION_METHODS.map((option, i) => (
+                      <option key={option.id} value={i}>
+                        {tr[option.labelKey]}
                       </option>
                     ))}
                   </select>
@@ -247,7 +248,9 @@ export function SettingsDesktop() {
                     expand_more
                   </span>
                 </div>
-                <p className="text-body-sm text-on-surface-variant italic">{tr.calcMethodMWLDesc}</p>
+                <p className="text-body-sm text-on-surface-variant italic">
+                  {getCalcMethodDesc(lang, settings.method)}
+                </p>
               </div>
               <div className="flex flex-col gap-4">
                 <label className="font-label-caps text-on-surface-variant">
@@ -259,8 +262,8 @@ export function SettingsDesktop() {
                       type="radio"
                       name="asr_method"
                       className="hidden peer"
-                      checked={asrMethod === 'standard'}
-                      onChange={() => setAsrMethod('standard')}
+                      checked={settings.school === 'standard'}
+                      onChange={() => setAsrSchool('standard')}
                     />
                     <div className="glass-card p-4 rounded-lg peer-checked:active-glow border border-transparent transition-all">
                       <div className="flex justify-between items-center mb-1">
@@ -268,7 +271,7 @@ export function SettingsDesktop() {
                         <span
                           className={cn(
                             'material-symbols-outlined text-secondary material-symbols-filled',
-                            asrMethod === 'standard' ? 'opacity-100' : 'opacity-0'
+                            settings.school === 'standard' ? 'opacity-100' : 'opacity-0'
                           )}
                         >
                           check_circle
@@ -284,8 +287,8 @@ export function SettingsDesktop() {
                       type="radio"
                       name="asr_method"
                       className="hidden peer"
-                      checked={asrMethod === 'hanafi'}
-                      onChange={() => setAsrMethod('hanafi')}
+                      checked={settings.school === 'hanafi'}
+                      onChange={() => setAsrSchool('hanafi')}
                     />
                     <div className="glass-card p-4 rounded-lg peer-checked:active-glow border border-transparent transition-all">
                       <div className="flex justify-between items-center mb-1">
@@ -293,7 +296,7 @@ export function SettingsDesktop() {
                         <span
                           className={cn(
                             'material-symbols-outlined text-secondary material-symbols-filled',
-                            asrMethod === 'hanafi' ? 'opacity-100' : 'opacity-0'
+                            settings.school === 'hanafi' ? 'opacity-100' : 'opacity-0'
                           )}
                         >
                           check_circle
