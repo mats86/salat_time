@@ -8,7 +8,9 @@ import {
 } from '@/lib/calc-settings';
 
 export function useCalcSettings() {
-  const [settings, setSettings] = useState<CalcSettings>(getDefaultCalcSettings());
+  const [settings, setSettings] = useState<CalcSettings>(() =>
+    typeof window !== 'undefined' ? getCalcSettings() : getDefaultCalcSettings()
+  );
 
   const refresh = useCallback(() => {
     setSettings(getCalcSettings());

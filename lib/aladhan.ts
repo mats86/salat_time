@@ -33,7 +33,7 @@ export async function fetchPrayerTimes(
   const dateStr = format(new Date(), 'dd-MM-yyyy');
   const schoolParam = asrSchoolToApi(school);
   const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${schoolParam}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch prayer times');
   const json: AladhanResponse = await res.json();
   const raw = json.data.timings;

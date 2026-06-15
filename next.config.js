@@ -41,12 +41,13 @@ const withPWA = require('next-pwa')({
     },
     {
       urlPattern: /^https:\/\/api\.aladhan\.com\/v1\/timings\/.*/i,
-      handler: 'StaleWhileRevalidate',
+      handler: 'NetworkFirst',
       options: {
         cacheName: 'aladhan-prayer-times',
+        networkTimeoutSeconds: 5,
         expiration: {
           maxEntries: 32,
-          maxAgeSeconds: 7 * 24 * 60 * 60,
+          maxAgeSeconds: 24 * 60 * 60,
         },
       },
     },

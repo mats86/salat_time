@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   fetchPrayerTimes,
   getNextPrayer,
@@ -9,6 +10,7 @@ import {
   PRAYER_ORDER,
 } from '@/lib/aladhan';
 import { getCalcSettings } from '@/lib/calc-settings';
+import { useCalcSettings } from '@/hooks/useCalcSettings';
 import {
   cachePrayerTimes,
   getCachedPrayerTimes,
@@ -30,6 +32,8 @@ function applyPrayerData(
 }
 
 export function usePrayerTimes(lat?: number, lng?: number) {
+  const pathname = usePathname();
+  const { settings } = useCalcSettings();
   const mounted = useMounted();
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
   const [hijri, setHijri] = useState<HijriDate | null>(null);
@@ -40,13 +44,17 @@ export function usePrayerTimes(lat?: number, lng?: number) {
   const [isOffline, setIsOffline] = useState(false);
   const [isStale, setIsStale] = useState(false);
   const dateRef = useRef(todayDateKey());
+  const loadedForRef = useRef<string | null>(null);
 
   const load = useCallback(async () => {
     if (lat == null || lng == null) return;
 
     const { method, school } = getCalcSettings();
+    const loadKey = `${method}:${school}`;
+    const settingsChanged = loadedForRef.current != null && loadedForRef.current !== loadKey;
+
     const cached = getCachedPrayerTimes(lat, lng, todayDateKey(), method, school);
-    if (cached) {
+    if (cached && !settingsChanged) {
       applyPrayerData(cached, setTimings, setHijri, setNextPrayer);
       setIsStale(!isSameDayCache(cached.date));
       setLoading(false);
@@ -58,12 +66,13 @@ export function usePrayerTimes(lat?: number, lng?: number) {
       const data = await fetchPrayerTimes(lat, lng, method, school);
       cachePrayerTimes(lat, lng, data, todayDateKey(), method, school);
       applyPrayerData(data, setTimings, setHijri, setNextPrayer);
+      loadedForRef.current = loadKey;
       setError(null);
       setIsOffline(false);
       setIsStale(false);
       dateRef.current = todayDateKey();
     } catch {
-      if (cached) {
+      if (cached && !settingsChanged) {
         setError(null);
         setIsOffline(true);
       } else {
@@ -73,11 +82,11 @@ export function usePrayerTimes(lat?: number, lng?: number) {
     } finally {
       setLoading(false);
     }
-  }, [lat, lng]);
+  }, [lat, lng, settings.method, settings.school]);
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, pathname]);
 
   useEffect(() => {
     const onCalcSettingsChanged = () => load();
@@ -101,14 +110,20 @@ export function usePrayerTimes(lat?: number, lng?: number) {
     };
     checkDate();
     const id = setInterval(checkDate, 60_000);
+    return () => clearInterval(id);
+  }, [load]);
+
+  useEffect(() => {
     const onVisible = () => {
-      if (document.visibilityState === 'visible') checkDate();
+      if (document.visibilityState !== 'visible') return;
+      const today = todayDateKey();
+      if (today !== dateRef.current) {
+        dateRef.current = today;
+      }
+      load();
     };
     document.addEventListener('visibilitychange', onVisible);
-    return () => {
-      clearInterval(id);
-      document.removeEventListener('visibilitychange', onVisible);
-    };
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, [load]);
 
   useEffect(() => {
