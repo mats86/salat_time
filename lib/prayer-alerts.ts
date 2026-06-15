@@ -102,6 +102,15 @@ export function setPrayerAlertEnabled(prayer: PrayerAlertName, enabled: boolean)
   dispatchSettingsChanged();
 }
 
+export function resetAllPrayerAlerts(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(MASTER_KEY, 'false');
+  for (const prayer of PRAYER_ALERT_NAMES) {
+    localStorage.setItem(prayerStorageKey(prayer), 'false');
+  }
+  dispatchSettingsChanged();
+}
+
 export function canUsePrayerAlerts(): boolean {
   if (typeof window === 'undefined') return false;
   return isPwaInstalled() && 'Notification' in window;

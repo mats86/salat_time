@@ -268,6 +268,12 @@ body {
     transform: translateX(1.25rem);
     background-color: #e9c349;
   }
+
+  .settings-sidebar-link.active {
+    background: rgba(177, 204, 196, 0.1);
+    color: #e9c349;
+    border-right: 3px solid #e9c349;
+  }
 }
 
 ::-webkit-scrollbar {
