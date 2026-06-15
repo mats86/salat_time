@@ -38,10 +38,10 @@ export function BottomNav() {
       active: pathname === '/qibla',
     },
     {
-      href: '/auth/login',
+      href: '/settings',
       icon: 'settings',
       label: tr.settings,
-      active: pathname.startsWith('/auth'),
+      active: pathname === '/settings',
     },
   ];
   return (
@@ -61,7 +61,9 @@ export function BottomNav() {
             <span
               className={cn(
                 'material-symbols-outlined',
-                item.active && item.icon === 'explore' && 'material-symbols-filled'
+                item.active &&
+                  (item.icon === 'explore' || item.icon === 'settings') &&
+                  'material-symbols-filled'
               )}
             >
               {item.icon}

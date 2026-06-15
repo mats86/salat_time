@@ -512,7 +512,7 @@ export function MosqueDetailClient({
             <span className="font-label-caps text-label-caps">{tr.qibla}</span>
           </Link>
           <Link
-            href="/auth/login"
+            href="/settings"
             className="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:text-primary transition-colors"
           >
             <span className="material-symbols-outlined mb-1">settings</span>
