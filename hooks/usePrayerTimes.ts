@@ -49,11 +49,18 @@ export function usePrayerTimes(lat?: number, lng?: number) {
   const load = useCallback(async () => {
     if (lat == null || lng == null) return;
 
-    const { method, school } = getCalcSettings();
-    const loadKey = `${method}:${school}`;
+    const { method, school, latitudeAdjust } = getCalcSettings();
+    const loadKey = `${method}:${school}:${latitudeAdjust}`;
     const settingsChanged = loadedForRef.current != null && loadedForRef.current !== loadKey;
 
-    const cached = getCachedPrayerTimes(lat, lng, todayDateKey(), method, school);
+    const cached = getCachedPrayerTimes(
+      lat,
+      lng,
+      todayDateKey(),
+      method,
+      school,
+      latitudeAdjust
+    );
     if (cached && !settingsChanged) {
       applyPrayerData(cached, setTimings, setHijri, setNextPrayer);
       setIsStale(!isSameDayCache(cached.date));
@@ -63,8 +70,8 @@ export function usePrayerTimes(lat?: number, lng?: number) {
     }
 
     try {
-      const data = await fetchPrayerTimes(lat, lng, method, school);
-      cachePrayerTimes(lat, lng, data, todayDateKey(), method, school);
+      const data = await fetchPrayerTimes(lat, lng, method, school, latitudeAdjust);
+      cachePrayerTimes(lat, lng, data, todayDateKey(), method, school, latitudeAdjust);
       applyPrayerData(data, setTimings, setHijri, setNextPrayer);
       loadedForRef.current = loadKey;
       setError(null);
@@ -82,7 +89,7 @@ export function usePrayerTimes(lat?: number, lng?: number) {
     } finally {
       setLoading(false);
     }
-  }, [lat, lng, settings.method, settings.school]);
+  }, [lat, lng, settings.method, settings.school, settings.latitudeAdjust]);
 
   useEffect(() => {
     load();

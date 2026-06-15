@@ -1,5 +1,5 @@
 import type { SchedulePrayerPayload } from '@/lib/prayer-alerts';
-import type { AsrSchool } from '@/lib/calc-settings';
+import type { AsrSchool, LatitudeAdjustment } from '@/lib/calc-settings';
 import type { HijriDate, Mosque, PrayerTimings } from '@/types';
 
 const PRAYER_PREFIX = 'sz_prayer_times_';
@@ -35,13 +35,20 @@ function prayerKey(
   lng: number,
   date: string,
   method: number,
-  school: AsrSchool
+  school: AsrSchool,
+  latitudeAdjust: LatitudeAdjustment
 ): string {
-  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_${date}`;
+  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_${latitudeAdjust}_${date}`;
 }
 
-function prayerPrefix(lat: number, lng: number, method: number, school: AsrSchool): string {
-  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_`;
+function prayerPrefix(
+  lat: number,
+  lng: number,
+  method: number,
+  school: AsrSchool,
+  latitudeAdjust: LatitudeAdjustment
+): string {
+  return `${PRAYER_PREFIX}${coordKey(lat, lng)}_${method}_${school}_${latitudeAdjust}_`;
 }
 
 function mosquesKey(lat: number, lng: number): string {
@@ -54,7 +61,8 @@ export function cachePrayerTimes(
   data: { timings: PrayerTimings; hijri: HijriDate },
   date = todayDateKey(),
   method = 3,
-  school: AsrSchool = 'standard'
+  school: AsrSchool = 'standard',
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
 ): void {
   if (typeof window === 'undefined') return;
   const entry: CachedPrayerTimes = {
@@ -63,7 +71,10 @@ export function cachePrayerTimes(
     date,
     fetchedAt: new Date().toISOString(),
   };
-  localStorage.setItem(prayerKey(lat, lng, date, method, school), JSON.stringify(entry));
+  localStorage.setItem(
+    prayerKey(lat, lng, date, method, school, latitudeAdjust),
+    JSON.stringify(entry)
+  );
 }
 
 export function getCachedPrayerTimes(
@@ -71,11 +82,14 @@ export function getCachedPrayerTimes(
   lng: number,
   date = todayDateKey(),
   method = 3,
-  school: AsrSchool = 'standard'
+  school: AsrSchool = 'standard',
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
 ): CachedPrayerTimes | null {
   if (typeof window === 'undefined') return null;
 
-  const exact = localStorage.getItem(prayerKey(lat, lng, date, method, school));
+  const exact = localStorage.getItem(
+    prayerKey(lat, lng, date, method, school, latitudeAdjust)
+  );
   if (exact) {
     try {
       return JSON.parse(exact) as CachedPrayerTimes;
@@ -84,7 +98,7 @@ export function getCachedPrayerTimes(
     }
   }
 
-  const prefix = prayerPrefix(lat, lng, method, school);
+  const prefix = prayerPrefix(lat, lng, method, school, latitudeAdjust);
   let latest: CachedPrayerTimes | null = null;
 
   for (let i = 0; i < localStorage.length; i++) {

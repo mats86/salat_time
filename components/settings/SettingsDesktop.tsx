@@ -8,7 +8,13 @@ import { useLang } from '@/components/providers/LangProvider';
 import { getAppBrandName, getPrayerLabel, getCalcMethodDesc } from '@/lib/i18n';
 import { SettingsDesktopNotificationRow } from '@/components/settings/SettingsDesktopNotificationRow';
 import { resetAllPrayerAlerts } from '@/lib/prayer-alerts';
-import { CALC_METHOD_OPTIONS, setAsrSchool, setCalcMethod } from '@/lib/calc-settings';
+import {
+  CALC_METHOD_OPTIONS,
+  LATITUDE_ADJUST_OPTIONS,
+  setAsrSchool,
+  setCalcMethod,
+  setLatitudeAdjustment,
+} from '@/lib/calc-settings';
 import { useCalcSettings } from '@/hooks/useCalcSettings';
 import { cn } from '@/lib/utils';
 
@@ -307,6 +313,41 @@ export function SettingsDesktop() {
                       </span>
                     </div>
                   </label>
+                </div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <label className="font-label-caps text-on-surface-variant">
+                  {tr.highLatitudeRule}
+                </label>
+                <p className="text-body-sm text-on-surface-variant -mt-2">{tr.highLatitudeHint}</p>
+                <div className="flex flex-col gap-3">
+                  {LATITUDE_ADJUST_OPTIONS.map((option) => (
+                    <label key={option.id} className="relative cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="latitude_adjust"
+                        className="hidden peer"
+                        checked={settings.latitudeAdjust === option.id}
+                        onChange={() => setLatitudeAdjustment(option.id)}
+                      />
+                      <div className="glass-card p-4 rounded-lg peer-checked:active-glow border border-transparent transition-all">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="font-title-md">{tr[option.labelKey]}</span>
+                          <span
+                            className={cn(
+                              'material-symbols-outlined text-secondary material-symbols-filled',
+                              settings.latitudeAdjust === option.id ? 'opacity-100' : 'opacity-0'
+                            )}
+                          >
+                            check_circle
+                          </span>
+                        </div>
+                        <span className="text-body-sm text-on-surface-variant">
+                          {tr[option.descKey]}
+                        </span>
+                      </div>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>

@@ -128,6 +128,14 @@ export const translations = {
     calcMethodEgyptDesc: 'Offizielle Methode Ägyptens und mehrerer afrikanischer Länder.',
     calcMethodUmmAlQuraDesc: 'Offizielle Methode Saudi-Arabiens (festes Isha-Offset).',
     calcMethodKarachiDesc: 'Verbreitet in Pakistan, Indien und Bangladesch.',
+    highLatitudeRule: 'Hochbreiten-Regel',
+    highLatitudeHint: 'Beeinflusst vor allem Fajr an hohen Breiten (z. B. im Sommer).',
+    latAdjustMiddleOfNight: 'Mitte der Nacht',
+    latAdjustMiddleOfNightDesc: 'Empfohlen für Deutschland und Europa. Entspricht IslamicFinder.',
+    latAdjustOneSeventh: 'Ein Siebtel der Nacht',
+    latAdjustOneSeventhDesc: 'Fajr und Isha je ein Siebtel der Nachtlänge.',
+    latAdjustAngleBased: 'Winkelbasiert',
+    latAdjustAngleBasedDesc: 'Reine Winkelmethode ohne Hochbreiten-Anpassung.',
     asrStandardDesc: 'Einfache Schattenlängen-Berechnung.',
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Doppelte Schattenlängen-Berechnung.',
@@ -405,6 +413,14 @@ export const translations = {
     calcMethodEgyptDesc: 'الطريقة الرسمية في مصر وعدة دول أفريقية.',
     calcMethodUmmAlQuraDesc: 'الطريقة الرسمية في السعودية (إزاحة ثابتة للعشاء).',
     calcMethodKarachiDesc: 'شائع في باكستان والهند وبنغلاديش.',
+    highLatitudeRule: 'قاعدة خط العرض العالي',
+    highLatitudeHint: 'يؤثر بشكل خاص على الفجر في خطوط العرض العالية (مثل الصيف).',
+    latAdjustMiddleOfNight: 'منتصف الليل',
+    latAdjustMiddleOfNightDesc: 'موصى به لألمانيا وأوروبا. يطابق IslamicFinder.',
+    latAdjustOneSeventh: 'سُبع الليل',
+    latAdjustOneSeventhDesc: 'الفجر والعشاء كل منهما سُبع طول الليل.',
+    latAdjustAngleBased: 'بالزوايا',
+    latAdjustAngleBasedDesc: 'طريقة الزوايا فقط دون تعديل لخط العرض العالي.',
     asrStandardDesc: 'حساب بطول ظل واحد.',
     asrHanafi: 'حنفي',
     asrHanafiDesc: 'حساب بطول ظل مضاعف.',
@@ -678,6 +694,14 @@ export const translations = {
     calcMethodEgyptDesc: 'Official method for Egypt and several African countries.',
     calcMethodUmmAlQuraDesc: 'Official method for Saudi Arabia (fixed Isha offset).',
     calcMethodKarachiDesc: 'Common in Pakistan, India and Bangladesh.',
+    highLatitudeRule: 'High Latitude Rule',
+    highLatitudeHint: 'Mainly affects Fajr at high latitudes (e.g. in summer).',
+    latAdjustMiddleOfNight: 'Middle of the Night',
+    latAdjustMiddleOfNightDesc: 'Recommended for Germany and Europe. Matches IslamicFinder.',
+    latAdjustOneSeventh: 'One Seventh of the Night',
+    latAdjustOneSeventhDesc: 'Fajr and Isha each one seventh of the night length.',
+    latAdjustAngleBased: 'Angle Based',
+    latAdjustAngleBasedDesc: 'Pure angle method without high-latitude adjustment.',
     asrStandardDesc: 'Single shadow length calculation.',
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Double shadow length calculation.',
@@ -910,4 +934,30 @@ export function getCalcMethodDesc(lang: Lang, methodId: number): string {
 export function getAsrSchoolLabel(lang: Lang, school: 'standard' | 'hanafi'): string {
   const tr = t(lang);
   return school === 'hanafi' ? tr.asrHanafi : tr.asrJuristicStandard;
+}
+
+export function getLatitudeAdjustLabel(
+  lang: Lang,
+  adjust: 'middle_of_night' | 'one_seventh' | 'angle_based'
+): string {
+  const tr = t(lang);
+  const labels: Record<typeof adjust, string> = {
+    middle_of_night: tr.latAdjustMiddleOfNight,
+    one_seventh: tr.latAdjustOneSeventh,
+    angle_based: tr.latAdjustAngleBased,
+  };
+  return labels[adjust];
+}
+
+export function getLatitudeAdjustDesc(
+  lang: Lang,
+  adjust: 'middle_of_night' | 'one_seventh' | 'angle_based'
+): string {
+  const tr = t(lang);
+  const descs: Record<typeof adjust, string> = {
+    middle_of_night: tr.latAdjustMiddleOfNightDesc,
+    one_seventh: tr.latAdjustOneSeventhDesc,
+    angle_based: tr.latAdjustAngleBasedDesc,
+  };
+  return descs[adjust];
 }

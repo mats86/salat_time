@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import type { Lang } from '@/types';
 import { useLang } from '@/components/providers/LangProvider';
-import { getPrayerLabel, getCalcMethodLabel, getAsrSchoolLabel } from '@/lib/i18n';
+import { getPrayerLabel, getCalcMethodLabel, getAsrSchoolLabel, getLatitudeAdjustLabel } from '@/lib/i18n';
 import { PRAYER_ALERT_NAMES } from '@/lib/prayer-alerts';
 import {
   CALC_METHOD_OPTIONS,
+  LATITUDE_ADJUST_OPTIONS,
   setAsrSchool,
   setCalcMethod,
+  setLatitudeAdjustment,
   type AsrSchool,
 } from '@/lib/calc-settings';
 import { useCalcSettings } from '@/hooks/useCalcSettings';
@@ -35,9 +37,11 @@ export function SettingsMobile() {
   const { lang, setLang, tr } = useLang();
   const { settings } = useCalcSettings();
   const [methodExpanded, setMethodExpanded] = useState(false);
+  const [latitudeExpanded, setLatitudeExpanded] = useState(false);
 
   const methodLabel = getCalcMethodLabel(lang, settings.method);
   const asrLabel = getAsrSchoolLabel(lang, settings.school);
+  const latitudeLabel = getLatitudeAdjustLabel(lang, settings.latitudeAdjust);
 
   const toggleAsrSchool = () => {
     const next: AsrSchool = settings.school === 'standard' ? 'hanafi' : 'standard';
@@ -114,6 +118,51 @@ export function SettingsMobile() {
                     )}
                   >
                     <span className="text-sm font-title-md">{tr[option.labelKey]}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setLatitudeExpanded((open) => !open)}
+            className="w-full p-4 flex items-center justify-between settings-gold-glow transition-all group text-left"
+          >
+            <div className="flex flex-col">
+              <span className="font-title-md text-on-surface">{tr.highLatitudeRule}</span>
+              <span className="text-xs text-on-surface-variant">{latitudeLabel}</span>
+            </div>
+            <span
+              className={cn(
+                'material-symbols-outlined text-secondary opacity-60 transition-transform',
+                latitudeExpanded && 'rotate-180'
+              )}
+            >
+              expand_more
+            </span>
+          </button>
+          {latitudeExpanded && (
+            <div className="bg-surface-container-low/40 divide-y divide-white/5">
+              <p className="px-4 pt-3 pb-1 text-xs text-on-surface-variant">{tr.highLatitudeHint}</p>
+              {LATITUDE_ADJUST_OPTIONS.map((option) => {
+                const selected = settings.latitudeAdjust === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() => {
+                      setLatitudeAdjustment(option.id);
+                      setLatitudeExpanded(false);
+                    }}
+                    className={cn(
+                      'w-full px-4 py-3 text-left transition-colors',
+                      selected
+                        ? 'bg-secondary/15 text-secondary'
+                        : 'text-on-surface-variant hover:bg-white/5'
+                    )}
+                  >
+                    <span className="text-sm font-title-md block">{tr[option.labelKey]}</span>
+                    <span className="text-xs opacity-70 mt-0.5 block">{tr[option.descKey]}</span>
                   </button>
                 );
               })}
