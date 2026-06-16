@@ -53,7 +53,9 @@ export function QiblaDesktop({
   const animFrameRef = useRef<number>(0);
   const baseRotationRef = useRef(baseRotation);
 
-  baseRotationRef.current = baseRotation;
+  useEffect(() => {
+    baseRotationRef.current = baseRotation;
+  }, [baseRotation]);
 
   const cycleLang = () => {
     const idx = langs.indexOf(lang);

@@ -1,9 +1,8 @@
-const defaultCache = require('next-pwa/cache');
+const withPWAInit = require('@ducanh2912/next-pwa').default;
 
-const withPWA = require('next-pwa')({
+const withPWA = withPWAInit({
   dest: 'public',
   register: true,
-  skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
   cacheOnFrontEndNav: true,
   reloadOnOnline: true,
@@ -12,48 +11,51 @@ const withPWA = require('next-pwa')({
   fallbacks: {
     document: '/offline.html',
   },
-  navigateFallback: '/offline.html',
-  navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/admin\//, /^\/staff\//, /^\/mosque\//],
-  buildExcludes: [/app-build-manifest\.json$/],
-  additionalManifestEntries: [
-    { url: '/offline.html', revision: null },
-    { url: '/qibla', revision: null },
-    { url: '/calendar', revision: null },
-    { url: '/settings', revision: null },
-    { url: '/fonts/material-symbols-outlined.ttf', revision: null },
-    { url: '/sounds/adhan.mp3', revision: null },
-    { url: '/icons/icon-192.png', revision: null },
-    { url: '/icons/icon-512.png', revision: null },
-    { url: '/manifest.json', revision: null },
-  ],
-  runtimeCaching: [
-    {
-      urlPattern: ({ request }) =>
-        request.mode === 'navigate' || request.destination === 'document',
-      handler: 'CacheFirst',
-      options: {
-        cacheName: 'pages',
-        expiration: {
-          maxEntries: 16,
-          maxAgeSeconds: 24 * 60 * 60,
-        },
-        matchOptions: { ignoreSearch: true },
-      },
-    },
-    {
-      urlPattern: /^https:\/\/api\.aladhan\.com\/v1\/timings\/.*/i,
-      handler: 'NetworkFirst',
-      options: {
-        cacheName: 'aladhan-prayer-times',
-        networkTimeoutSeconds: 5,
-        expiration: {
-          maxEntries: 32,
-          maxAgeSeconds: 24 * 60 * 60,
+  customWorkerSrc: 'worker',
+  workboxOptions: {
+    skipWaiting: true,
+    navigateFallback: '/offline.html',
+    navigateFallbackDenylist: [/^\/api\//, /^\/auth\//, /^\/admin\//, /^\/staff\//, /^\/mosque\//],
+    exclude: [/app-build-manifest\.json$/],
+    additionalManifestEntries: [
+      { url: '/offline.html', revision: null },
+      { url: '/qibla', revision: null },
+      { url: '/calendar', revision: null },
+      { url: '/settings', revision: null },
+      { url: '/fonts/material-symbols-outlined.ttf', revision: null },
+      { url: '/sounds/adhan.mp3', revision: null },
+      { url: '/icons/icon-192.png', revision: null },
+      { url: '/icons/icon-512.png', revision: null },
+      { url: '/manifest.json', revision: null },
+    ],
+    runtimeCaching: [
+      {
+        urlPattern: ({ request }) =>
+          request.mode === 'navigate' || request.destination === 'document',
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'pages',
+          expiration: {
+            maxEntries: 16,
+            maxAgeSeconds: 24 * 60 * 60,
+          },
+          matchOptions: { ignoreSearch: true },
         },
       },
-    },
-    ...defaultCache,
-  ],
+      {
+        urlPattern: /^https:\/\/api\.aladhan\.com\/v1\/timings\/.*/i,
+        handler: 'NetworkFirst',
+        options: {
+          cacheName: 'aladhan-prayer-times',
+          networkTimeoutSeconds: 5,
+          expiration: {
+            maxEntries: 32,
+            maxAgeSeconds: 24 * 60 * 60,
+          },
+        },
+      },
+    ],
+  },
 });
 
 /** @type {import('next').NextConfig} */

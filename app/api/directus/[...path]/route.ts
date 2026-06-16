@@ -85,30 +85,34 @@ async function proxy(request: NextRequest, method: string, path: string[]) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxy(request, 'GET', params.path);
+  const { path } = await params;
+  return proxy(request, 'GET', path);
 }
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxy(request, 'POST', params.path);
+  const { path } = await params;
+  return proxy(request, 'POST', path);
 }
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxy(request, 'PATCH', params.path);
+  const { path } = await params;
+  return proxy(request, 'PATCH', path);
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
-  return proxy(request, 'DELETE', params.path);
+  const { path } = await params;
+  return proxy(request, 'DELETE', path);
 }
 
 export async function OPTIONS() {

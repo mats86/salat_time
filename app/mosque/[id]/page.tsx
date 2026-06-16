@@ -9,11 +9,13 @@ import { MosqueDetailClient } from '@/components/mosque/MosqueDetailClient';
 export default async function MosqueDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+
   let mosque;
   try {
-    mosque = await fetchMosqueById(params.id);
+    mosque = await fetchMosqueById(id);
   } catch {
     notFound();
   }
@@ -23,8 +25,8 @@ export default async function MosqueDetailPage({
   }
 
   const [prayerTimes, events] = await Promise.all([
-    fetchPrayerTimesForMosque(params.id),
-    fetchMosqueEvents(params.id),
+    fetchPrayerTimesForMosque(id),
+    fetchMosqueEvents(id),
   ]);
 
   return (
