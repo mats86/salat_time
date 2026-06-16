@@ -1,7 +1,10 @@
 import type { SchedulePrayerPayload } from '@/lib/prayer-alerts';
 import type { AsrSchool, LatitudeAdjustment } from '@/lib/calc-settings';
+import type { CalendarDayEntry } from '@/lib/aladhan';
+
 import type { HijriDate, Mosque, PrayerTimings } from '@/types';
 
+const CALENDAR_PREFIX = 'sz_prayer_calendar_';
 const PRAYER_PREFIX = 'sz_prayer_times_';
 const MOSQUES_PREFIX = 'sz_mosques_';
 const SCHEDULE_KEY = 'sz_prayer_schedule';
@@ -15,6 +18,13 @@ export interface CachedPrayerTimes {
 
 export interface CachedMosques {
   mosques: Mosque[];
+  fetchedAt: string;
+}
+
+export interface CachedPrayerCalendar {
+  days: CalendarDayEntry[];
+  year: number;
+  month: number;
   fetchedAt: string;
 }
 
@@ -53,6 +63,62 @@ function prayerPrefix(
 
 function mosquesKey(lat: number, lng: number): string {
   return `${MOSQUES_PREFIX}${coordKey(lat, lng)}`;
+}
+
+function calendarKey(
+  lat: number,
+  lng: number,
+  year: number,
+  month: number,
+  method: number,
+  school: AsrSchool,
+  latitudeAdjust: LatitudeAdjustment
+): string {
+  return `${CALENDAR_PREFIX}${coordKey(lat, lng)}_${method}_${school}_${latitudeAdjust}_${year}-${month}`;
+}
+
+export function cachePrayerCalendar(
+  lat: number,
+  lng: number,
+  year: number,
+  month: number,
+  days: CalendarDayEntry[],
+  method = 3,
+  school: AsrSchool = 'standard',
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
+): void {
+  if (typeof window === 'undefined') return;
+  const entry: CachedPrayerCalendar = {
+    days,
+    year,
+    month,
+    fetchedAt: new Date().toISOString(),
+  };
+  localStorage.setItem(
+    calendarKey(lat, lng, year, month, method, school, latitudeAdjust),
+    JSON.stringify(entry)
+  );
+}
+
+export function getCachedPrayerCalendar(
+  lat: number,
+  lng: number,
+  year: number,
+  month: number,
+  method = 3,
+  school: AsrSchool = 'standard',
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
+): CachedPrayerCalendar | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(
+    calendarKey(lat, lng, year, month, method, school, latitudeAdjust)
+  );
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as CachedPrayerCalendar;
+  } catch {
+    return null;
+  }
 }
 
 export function cachePrayerTimes(

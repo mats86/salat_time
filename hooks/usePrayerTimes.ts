@@ -7,7 +7,7 @@ import {
   getNextPrayer,
   getCountdownSeconds,
   formatCountdown,
-  PRAYER_ORDER,
+  buildDaySchedule,
 } from '@/lib/aladhan';
 import { getCalcSettings } from '@/lib/calc-settings';
 import { useCalcSettings } from '@/hooks/useCalcSettings';
@@ -145,24 +145,7 @@ export function usePrayerTimes(lat?: number, lng?: number) {
   }, [nextPrayer]);
 
   const schedule: MergedPrayerTime[] = timings
-    ? PRAYER_ORDER.map((name) => {
-        const isCurrent = nextPrayer?.name === name;
-        let isPast = false;
-        if (mounted) {
-          const now = new Date();
-          const [h, m] = timings[name].split(':').map(Number);
-          const prayerTime = new Date();
-          prayerTime.setHours(h, m, 0, 0);
-          isPast = prayerTime < now && !isCurrent;
-        }
-        return {
-          name,
-          time: timings[name],
-          isCustom: false,
-          isCurrent,
-          isPast,
-        };
-      })
+    ? buildDaySchedule(timings, { isToday: true, nextPrayer, mounted })
     : [];
 
   return {

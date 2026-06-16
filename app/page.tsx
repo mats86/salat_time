@@ -15,6 +15,7 @@ import { getLocationErrorMessage } from '@/lib/i18n';
 import { useLocation } from '@/hooks/useLocation';
 import { usePrayerAlerts } from '@/hooks/usePrayerAlerts';
 import { usePrayerTimes } from '@/hooks/usePrayerTimes';
+import { usePrayerScheduleDays } from '@/hooks/usePrayerScheduleDays';
 import { useNearbyMosques } from '@/hooks/useNearbyMosques';
 
 export default function HomePage() {
@@ -30,6 +31,11 @@ export default function HomePage() {
   } = useLocation();
   const { timings, hijri, countdown, nextPrayer, schedule, loading: prayerLoading, isStale } =
     usePrayerTimes(coords?.lat, coords?.lng);
+  const {
+    days: scheduleDays,
+    loading: scheduleDaysLoading,
+    todayIndex: scheduleTodayIndex,
+  } = usePrayerScheduleDays(coords?.lat, coords?.lng);
   const { mosques, loading: mosquesLoading } = useNearbyMosques(coords?.lat, coords?.lng);
   usePrayerAlerts(timings, lang);
   const [locationOpen, setLocationOpen] = useState(false);
@@ -161,7 +167,13 @@ export default function HomePage() {
             />
           )}
 
-          {!loading && schedule.length > 0 && <PrayerGrid schedule={schedule} />}
+          {!loading && (scheduleDays.length > 0 || scheduleDaysLoading) && (
+            <PrayerGrid
+              days={scheduleDays}
+              todayIndex={scheduleTodayIndex}
+              loading={scheduleDaysLoading}
+            />
+          )}
 
           <section id="mosques" className="space-y-stack-md">
             <div className="flex justify-between items-center px-1">

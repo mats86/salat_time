@@ -15,11 +15,20 @@ const PRAYER_ICONS: Record<string, string> = {
   Isha: 'bedtime',
 };
 
-export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
+export function PrayerRow({
+  prayer,
+  highlightState = true,
+}: {
+  prayer: MergedPrayerTime;
+  highlightState?: boolean;
+}) {
   const { lang, tr } = useLang();
   const label = getPrayerLabel(lang, prayer.name);
 
-  if (prayer.isCurrent) {
+  const isCurrent = highlightState && prayer.isCurrent;
+  const dimmed = highlightState && prayer.isPast;
+
+  if (isCurrent) {
     return (
       <div className="flex justify-between items-center px-4 py-4 bg-primary-container/30 rounded-xl border border-secondary/50 relative overflow-hidden">
         <span className="absolute top-0 start-0 z-10 font-label-caps text-[10px] text-label-caps text-secondary-fixed bg-secondary-container/20 px-2 py-0.5 rounded-ee-md border-e border-b border-secondary/30">
@@ -38,8 +47,6 @@ export function PrayerRow({ prayer }: { prayer: MergedPrayerTime }) {
       </div>
     );
   }
-
-  const dimmed = prayer.isPast;
 
   return (
     <div

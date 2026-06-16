@@ -118,3 +118,11 @@ export interface MergedPrayerTime {
   isCurrent: boolean;
   isPast: boolean;
 }
+
+export interface DayPrayerSchedule {
+  date: string;
+  timings: PrayerTimings;
+  hijri: HijriDate;
+  schedule: MergedPrayerTime[];
+  isToday: boolean;
+}

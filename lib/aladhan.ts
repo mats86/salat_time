@@ -5,7 +5,7 @@ import {
   type AsrSchool,
   type LatitudeAdjustment,
 } from '@/lib/calc-settings';
-import type { HijriDate, PrayerTimings, PrayerName } from '@/types';
+import type { HijriDate, PrayerTimings, PrayerName, MergedPrayerTime } from '@/types';
 
 export const PRAYER_ORDER: PrayerName[] = [
   'Fajr',
@@ -29,36 +29,166 @@ export interface AladhanResponse {
   };
 }
 
+export interface AladhanCalendarDay {
+  timings: Record<string, string>;
+  date: {
+    readable: string;
+    gregorian: {
+      date: string;
+      day: string;
+      month: { number: number; en: string };
+      year: string;
+    };
+    hijri: {
+      day: string;
+      month: { en: string };
+      year: string;
+    };
+  };
+}
+
+export interface CalendarDayEntry {
+  date: string;
+  timings: PrayerTimings;
+  hijri: HijriDate;
+}
+
+function stripTime(v: string): string {
+  return v.split(' ')[0] ?? v;
+}
+
+function parseTimings(raw: Record<string, string>): PrayerTimings {
+  return {
+    Fajr: stripTime(raw.Fajr),
+    Sunrise: stripTime(raw.Sunrise),
+    Dhuhr: stripTime(raw.Dhuhr),
+    Asr: stripTime(raw.Asr),
+    Maghrib: stripTime(raw.Maghrib),
+    Isha: stripTime(raw.Isha),
+  };
+}
+
+function parseHijri(hijri: AladhanCalendarDay['date']['hijri']): HijriDate {
+  return {
+    day: hijri.day,
+    month: hijri.month.en,
+    year: hijri.year,
+  };
+}
+
+/** Convert Aladhan gregorian date "DD-MM-YYYY" to ISO "YYYY-MM-DD". */
+export function gregorianToIsoDate(gregorianDate: string): string {
+  const [day, month, year] = gregorianDate.split('-');
+  return `${year}-${month}-${day}`;
+}
+
+export function isoDateToDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export async function fetchPrayerTimes(
   lat: number,
   lng: number,
   method = Number(process.env.NEXT_PUBLIC_ALADHAN_METHOD) || 3,
   school: AsrSchool = 'standard',
-  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night',
+  date: Date = new Date()
 ): Promise<{ timings: PrayerTimings; hijri: HijriDate }> {
-  const dateStr = format(new Date(), 'dd-MM-yyyy');
+  const dateStr = format(date, 'dd-MM-yyyy');
   const schoolParam = asrSchoolToApi(school);
   const adjustParam = latitudeAdjustToApi(latitudeAdjust);
   const url = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${schoolParam}&latitudeAdjustmentMethod=${adjustParam}`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to fetch prayer times');
   const json: AladhanResponse = await res.json();
-  const raw = json.data.timings;
-  const strip = (v: string) => v.split(' ')[0] ?? v;
-  const timings: PrayerTimings = {
-    Fajr: strip(raw.Fajr),
-    Sunrise: strip(raw.Sunrise),
-    Dhuhr: strip(raw.Dhuhr),
-    Asr: strip(raw.Asr),
-    Maghrib: strip(raw.Maghrib),
-    Isha: strip(raw.Isha),
-  };
-  const hijri: HijriDate = {
-    day: json.data.date.hijri.day,
-    month: json.data.date.hijri.month.en,
-    year: json.data.date.hijri.year,
-  };
+  const timings = parseTimings(json.data.timings);
+  const hijri = parseHijri(json.data.date.hijri);
   return { timings, hijri };
+}
+
+export async function fetchPrayerCalendar(
+  year: number,
+  month: number,
+  lat: number,
+  lng: number,
+  method = Number(process.env.NEXT_PUBLIC_ALADHAN_METHOD) || 3,
+  school: AsrSchool = 'standard',
+  latitudeAdjust: LatitudeAdjustment = 'middle_of_night'
+): Promise<CalendarDayEntry[]> {
+  const schoolParam = asrSchoolToApi(school);
+  const adjustParam = latitudeAdjustToApi(latitudeAdjust);
+  const url = `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}&method=${method}&school=${schoolParam}&latitudeAdjustmentMethod=${adjustParam}`;
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('Failed to fetch prayer calendar');
+  const json: { data: AladhanCalendarDay[] } = await res.json();
+  return json.data.map((day) => ({
+    date: gregorianToIsoDate(day.date.gregorian.date),
+    timings: parseTimings(day.timings),
+    hijri: parseHijri(day.date.hijri),
+  }));
+}
+
+export function buildDaySchedule(
+  timings: PrayerTimings,
+  options: {
+    isToday: boolean;
+    nextPrayer?: { name: PrayerName; time: string } | null;
+    mounted?: boolean;
+  }
+): MergedPrayerTime[] {
+  const { isToday, nextPrayer, mounted = true } = options;
+  return PRAYER_ORDER.map((name) => {
+    if (!isToday) {
+      return {
+        name,
+        time: timings[name],
+        isCustom: false,
+        isCurrent: false,
+        isPast: false,
+      };
+    }
+    const isCurrent = nextPrayer?.name === name;
+    let isPast = false;
+    if (mounted) {
+      const now = new Date();
+      const [h, m] = timings[name].split(':').map(Number);
+      const prayerTime = new Date();
+      prayerTime.setHours(h, m, 0, 0);
+      isPast = prayerTime < now && !isCurrent;
+    }
+    return {
+      name,
+      time: timings[name],
+      isCustom: false,
+      isCurrent,
+      isPast,
+    };
+  });
+}
+
+export function getDateRangeKeys(
+  center: Date,
+  daysBefore: number,
+  daysAfter: number
+): { dates: string[]; todayIndex: number; months: { year: number; month: number }[] } {
+  const dates: string[] = [];
+  const monthSet = new Set<string>();
+
+  for (let offset = -daysBefore; offset <= daysAfter; offset++) {
+    const d = new Date(center);
+    d.setDate(center.getDate() + offset);
+    const iso = format(d, 'yyyy-MM-dd');
+    dates.push(iso);
+    monthSet.add(`${d.getFullYear()}-${d.getMonth() + 1}`);
+  }
+
+  const months = Array.from(monthSet).map((key) => {
+    const [year, month] = key.split('-').map(Number);
+    return { year, month };
+  });
+
+  return { dates, todayIndex: daysBefore, months };
 }
 
 export function getNextPrayer(timings: PrayerTimings): { name: PrayerName; time: string } {

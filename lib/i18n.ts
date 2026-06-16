@@ -1,4 +1,8 @@
+import { format } from 'date-fns';
+import { de, ar, enUS } from 'date-fns/locale';
 import type { Lang, PrayerName } from '@/types';
+
+const SCHEDULE_DATE_LOCALES = { de, ar, en: enUS };
 
 export const translations = {
   de: {
@@ -30,6 +34,8 @@ export const translations = {
     offlinePrayerStale: 'Offline — Gebetszeiten vom letzten Tag',
     backOnline: 'Wieder online',
     todaySchedule: 'Heutiger Plan',
+    prayerSchedule: 'Gebetsplan',
+    scheduleToday: 'Heute',
     mosquesNearYou: 'Moscheen in der Nähe',
     viewAll: 'Alle anzeigen',
     jummahRelevant: 'FREITAGSRELEVANT',
@@ -315,6 +321,8 @@ export const translations = {
     offlinePrayerStale: 'غير متصل — أوقات الصلاة من اليوم السابق',
     backOnline: 'متصل مجدداً',
     todaySchedule: 'جدول اليوم',
+    prayerSchedule: 'جدول الصلاة',
+    scheduleToday: 'اليوم',
     mosquesNearYou: 'المساجد القريبة',
     viewAll: 'عرض الكل',
     jummahRelevant: 'ذو صلة بالجمعة',
@@ -596,6 +604,8 @@ export const translations = {
     offlinePrayerStale: 'Offline — prayer times from previous day',
     backOnline: 'Back online',
     todaySchedule: "Today's Schedule",
+    prayerSchedule: 'Prayer Schedule',
+    scheduleToday: 'Today',
     mosquesNearYou: 'Mosques Near You',
     viewAll: 'View All',
     jummahRelevant: 'JUMAH RELEVANT',
@@ -960,4 +970,8 @@ export function getLatitudeAdjustDesc(
     angle_based: tr.latAdjustAngleBasedDesc,
   };
   return descs[adjust];
+}
+
+export function formatScheduleDate(lang: Lang, date: Date): string {
+  return format(date, 'EEEE, d MMMM yyyy', { locale: SCHEDULE_DATE_LOCALES[lang] });
 }
