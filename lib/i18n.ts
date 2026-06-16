@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import { de, ar, enUS } from 'date-fns/locale';
-import type { Lang, PrayerName } from '@/types';
+import { getCalcSettings } from '@/lib/calc-settings';
+import { isoDateToDate } from '@/lib/aladhan';
+import type { HijriDate, Lang, PrayerName } from '@/types';
 
 const SCHEDULE_DATE_LOCALES = { de, ar, en: enUS };
 
@@ -269,6 +271,41 @@ export const translations = {
     qiblaAngleCaps: 'QIBLA-WINKEL',
     distanceCaps: 'ENTFERNUNG',
     viewCalendar: 'Kalender anzeigen',
+    calendarMonthlyTitle: '{gregorian} / {hijri} AH',
+    calendarMonthlySubtitle:
+      'Monatlicher Gebetsplan für {location}. Angepasst für hohe Breitengrade.',
+    addToCalendar: 'Zum Kalender hinzufügen',
+    exportToPdf: 'Als PDF exportieren',
+    shareSchedule: 'Teilen',
+    calendarColDate: 'Datum',
+    calendarColFajr: 'Fajr',
+    calendarColSun: 'Son',
+    calendarColDhuhr: 'Dhuhr',
+    calendarColAsr: 'Asr',
+    calendarColMagh: 'Magh',
+    calendarColIsha: 'Isha',
+    calendarLocationDetected: 'Standort erkannt',
+    calendarCalculationMethod: 'Berechnungsmethode',
+    calendarAsrApplied: 'Asr: {asr} angewendet',
+    calendarDisclaimer:
+      'Zeiten von der Salat-Zeit-Engine.\nAbgestimmt mit lokalem Moschee-Konsens für {region}.',
+    calendarDateColumn: 'Datum',
+    calendarHijriColumn: 'Islamischer Kalender',
+    legendCurrentDay: 'Aktueller Tag',
+    legendSpecialOccasions: 'Besondere Anlässe',
+    calendarCalcFooter: 'Methode: {method} | Asr: {asr} | Hochbreiten: {latitude}',
+    calendarLocationTitle: 'Standorterkennung',
+    calendarLocationDesc:
+      'Deine Zeiten werden automatisch anhand des Browser-Standorts für {location} berechnet.',
+    calendarSettingsTitle: 'Berechnungseinstellungen',
+    calendarSettingsDesc:
+      'Aktuelle Berechnungsmethode und Asr-Schule. Änderbar in den Einstellungen.',
+    calendarRemindersTitle: 'Intelligente Erinnerungen',
+    calendarRemindersDesc:
+      'Erhalte Gebetsbenachrichtigungen direkt auf deinem Gerät.',
+    ramadanBeginsBanner: 'RAMADAN {year} BEGINNT (VORAUSS. {date})',
+    calendarFooterTagline: '© 2024 Salat Zeit. Moderne islamische Exzellenz.',
+    aboutUs: 'Über uns',
     dailyDhikr: 'Täglicher Dhikr',
     dailyDhikrSub: 'Empfohlen nach Asr',
     footerCopyright: '© 2024 Salat Zeit. Alle Rechte vorbehalten.',
@@ -552,6 +589,37 @@ export const translations = {
     qiblaAngleCaps: 'زاوية القبلة',
     distanceCaps: 'المسافة',
     viewCalendar: 'عرض التقويم',
+    calendarMonthlyTitle: '{gregorian} / {hijri} هـ',
+    calendarMonthlySubtitle: 'جدول الصلاة الشهري لـ {location}. معدّل لخطوط العرض العالية.',
+    addToCalendar: 'إضافة إلى التقويم',
+    exportToPdf: 'تصدير PDF',
+    shareSchedule: 'مشاركة',
+    calendarColDate: 'التاريخ',
+    calendarColFajr: 'فجر',
+    calendarColSun: 'شروق',
+    calendarColDhuhr: 'ظهر',
+    calendarColAsr: 'عصر',
+    calendarColMagh: 'مغرب',
+    calendarColIsha: 'عشاء',
+    calendarLocationDetected: 'تم اكتشاف الموقع',
+    calendarCalculationMethod: 'طريقة الحساب',
+    calendarAsrApplied: 'العصر: {asr}',
+    calendarDisclaimer:
+      'الأوقات من محرك Salat Zeit.\nتم التحقق منها وفق إجماع المساجد المحلية في {region}.',
+    calendarDateColumn: 'التاريخ',
+    calendarHijriColumn: 'التقويم الهجري',
+    legendCurrentDay: 'اليوم الحالي',
+    legendSpecialOccasions: 'مناسبات خاصة',
+    calendarCalcFooter: 'الطريقة: {method} | العصر: {asr} | خط العرض: {latitude}',
+    calendarLocationTitle: 'اكتشاف الموقع',
+    calendarLocationDesc: 'يتم حساب أوقاتك تلقائياً لـ {location} بناءً على موقع المتصفح.',
+    calendarSettingsTitle: 'إعدادات الحساب',
+    calendarSettingsDesc: 'طريقة الحساب الحالية ومذهب العصر. يمكن تغييرها في الإعدادات.',
+    calendarRemindersTitle: 'تذكيرات ذكية',
+    calendarRemindersDesc: 'تلقَّ إشعارات الصلاة مباشرة على جهازك.',
+    ramadanBeginsBanner: 'يبدأ رمضان {year} (متوقع {date})',
+    calendarFooterTagline: '© 2024 Salat Zeit. تميز إسلامي عصري.',
+    aboutUs: 'من نحن',
     dailyDhikr: 'الذكر اليومي',
     dailyDhikrSub: 'موصى به بعد العصر',
     footerCopyright: '© 2024 Salat Zeit. جميع الحقوق محفوظة.',
@@ -837,6 +905,40 @@ export const translations = {
     qiblaAngleCaps: 'QIBLA ANGLE',
     distanceCaps: 'DISTANCE',
     viewCalendar: 'View Calendar',
+    calendarMonthlyTitle: '{gregorian} / {hijri} AH',
+    calendarMonthlySubtitle:
+      'Monthly prayer schedule for {location}. Adjusted for higher latitudes.',
+    addToCalendar: 'Add to Calendar',
+    exportToPdf: 'Export PDF',
+    shareSchedule: 'Share',
+    calendarColDate: 'Date',
+    calendarColFajr: 'Fajr',
+    calendarColSun: 'Sun',
+    calendarColDhuhr: 'Dhuhr',
+    calendarColAsr: 'Asr',
+    calendarColMagh: 'Magh',
+    calendarColIsha: 'Isha',
+    calendarLocationDetected: 'Location Detected',
+    calendarCalculationMethod: 'Calculation Method',
+    calendarAsrApplied: 'Asr: {asr} applied',
+    calendarDisclaimer:
+      'Times generated by Salat Zeit Engine.\nVerified against local mosque consensus for {region}.',
+    calendarDateColumn: 'Date',
+    calendarHijriColumn: 'Islamic Calendar',
+    legendCurrentDay: 'Current Day',
+    legendSpecialOccasions: 'Special Occasions',
+    calendarCalcFooter: 'Method: {method} | Asr: {asr} | High Latitudes: {latitude}',
+    calendarLocationTitle: 'Location Detection',
+    calendarLocationDesc:
+      "Your times are automatically calculated for {location} based on your browser's geo-location.",
+    calendarSettingsTitle: 'Calculation Settings',
+    calendarSettingsDesc:
+      'Current calculation method and Asr school. You can modify these in settings.',
+    calendarRemindersTitle: 'Smart Reminders',
+    calendarRemindersDesc: 'Receive prayer notifications directly on your device.',
+    ramadanBeginsBanner: 'RAMADAN {year} BEGINS (EXPECTED {date})',
+    calendarFooterTagline: '© 2024 Salat Zeit. Modern Islamic Excellence.',
+    aboutUs: 'About Us',
     dailyDhikr: 'Daily Dhikr',
     dailyDhikrSub: 'Recommended after Asr',
     footerCopyright: '© 2024 Salat Zeit. All rights reserved.',
@@ -975,3 +1077,66 @@ export function getLatitudeAdjustDesc(
 export function formatScheduleDate(lang: Lang, date: Date): string {
   return format(date, 'EEEE, d MMMM yyyy', { locale: SCHEDULE_DATE_LOCALES[lang] });
 }
+
+export function formatCalendarMobileRowDate(lang: Lang, isoDate: string): string {
+  const date = isoDateToDate(isoDate);
+  return format(date, 'dd EEE', { locale: SCHEDULE_DATE_LOCALES[lang] });
+}
+
+export function formatCalendarHijriMonthLabel(lang: Lang, hijri: HijriDate, suffix: string): string {
+  const monthName = lang === 'ar' && hijri.monthAr ? hijri.monthAr : hijri.month;
+  return `${monthName} ${hijri.year} ${suffix}`;
+}
+
+export function getCalendarHijriSubtitle(
+  lang: Lang,
+  days: { hijri: HijriDate }[],
+  suffix: string
+): string {
+  if (!days.length) return '';
+  const first = days[0].hijri;
+  const last = days[days.length - 1].hijri;
+  if (first.month === last.month && first.year === last.year) {
+    return formatCalendarHijriMonthLabel(lang, first, suffix);
+  }
+  return `${formatCalendarHijriMonthLabel(lang, first, suffix)} – ${formatCalendarHijriMonthLabel(lang, last, suffix)}`;
+}
+
+export function formatCalendarTableDate(lang: Lang, isoDate: string): string {
+  const date = isoDateToDate(isoDate);
+  return format(date, 'MMM dd / EEE', { locale: SCHEDULE_DATE_LOCALES[lang] });
+}
+
+export function formatCalendarTableHijriDate(lang: Lang, hijri: HijriDate): string {
+  const monthName = lang === 'ar' && hijri.monthAr ? hijri.monthAr : hijri.month;
+  return `${hijri.day} ${monthName} ${hijri.year}`;
+}
+
+export function formatCalendarMonthYear(lang: Lang, year: number, month: number): string {
+  const date = new Date(year, month - 1, 1);
+  return format(date, 'MMMM yyyy', { locale: SCHEDULE_DATE_LOCALES[lang] });
+}
+
+function isRamadanMonth(hijri: { month: string; monthNumber?: number }): boolean {
+  if (hijri.monthNumber === 9) return true;
+  return hijri.month.toLowerCase().includes('ramad');
+}
+
+export function getCalcSettingsSummary(lang: Lang): string {
+  const tr = t(lang);
+  const settings =
+    typeof window !== 'undefined'
+      ? getCalcSettings()
+      : { method: 3, school: 'standard' as const, latitudeAdjust: 'middle_of_night' as const };
+
+  const methodLabel = getCalcMethodLabel(lang, settings.method);
+  const asrLabel = settings.school === 'hanafi' ? tr.asrHanafi : tr.asrJuristicStandard;
+  const latLabel = getLatitudeAdjustLabel(lang, settings.latitudeAdjust);
+
+  return tr.calendarCalcFooter
+    .replace('{method}', methodLabel)
+    .replace('{asr}', asrLabel)
+    .replace('{latitude}', latLabel);
+}
+
+export { isRamadanMonth };

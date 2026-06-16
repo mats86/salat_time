@@ -187,6 +187,37 @@ body {
     box-shadow: 0 0 20px rgba(233, 195, 73, 0.15);
   }
 
+  .active-day-glow {
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+    border: 1px solid #d4af37;
+  }
+
+  .table-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .table-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .table-scrollbar::-webkit-scrollbar-thumb {
+    background: #424846;
+    border-radius: 10px;
+  }
+
+  .calendar-row-hover {
+    transition: transform 0.2s ease-out, background-color 0.2s ease;
+  }
+
+  .calendar-row-hover:hover {
+    transform: translateX(4px);
+  }
+
+  .calendar-row-active:hover {
+    transform: none;
+  }
+
   .prayer-row-transition {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }

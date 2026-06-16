@@ -22,7 +22,7 @@ export interface AladhanResponse {
     date: {
       hijri: {
         day: string;
-        month: { en: string };
+        month: { en: string; number?: number };
         year: string;
       };
     };
@@ -41,7 +41,7 @@ export interface AladhanCalendarDay {
     };
     hijri: {
       day: string;
-      month: { en: string };
+      month: { number: number; en: string };
       year: string;
     };
   };
@@ -68,11 +68,16 @@ function parseTimings(raw: Record<string, string>): PrayerTimings {
   };
 }
 
-function parseHijri(hijri: AladhanCalendarDay['date']['hijri']): HijriDate {
+function parseHijri(
+  hijri: AladhanCalendarDay['date']['hijri'] | AladhanResponse['data']['date']['hijri']
+): HijriDate {
+  const month = hijri.month as { en: string; ar?: string; number?: number };
   return {
     day: hijri.day,
-    month: hijri.month.en,
+    month: month.en,
+    monthAr: month.ar,
     year: hijri.year,
+    monthNumber: 'number' in month ? month.number : undefined,
   };
 }
 

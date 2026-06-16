@@ -20,7 +20,9 @@ export interface PrayerTimings {
 export interface HijriDate {
   day: string;
   month: string;
+  monthAr?: string;
   year: string;
+  monthNumber?: number;
 }
 
 export interface Mosque {

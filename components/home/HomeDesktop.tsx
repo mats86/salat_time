@@ -373,14 +373,20 @@ export function HomeDesktop({
             </div>
 
             <div id="qibla" className="grid grid-cols-2 gap-4 scroll-mt-24">
-              <div className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent">
+              <Link
+                href="/qibla"
+                className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent"
+              >
                 <span className="material-symbols-outlined text-secondary text-4xl mb-2">explore</span>
                 <span className="font-title-md text-title-md">{tr.qiblaFinder}</span>
                 <span className="font-label-caps text-[10px] text-on-surface-variant mt-1">
                   {tr.qiblaDirection}
                 </span>
-              </div>
-              <div className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent">
+              </Link>
+              <Link
+                href="/calendar"
+                className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent"
+              >
                 <span className="material-symbols-outlined text-secondary text-4xl mb-2">
                   calendar_month
                 </span>
@@ -388,7 +394,7 @@ export function HomeDesktop({
                 <span className="font-label-caps text-[10px] text-on-surface-variant mt-1">
                   {calendarSub}
                 </span>
-              </div>
+              </Link>
               <div className="col-span-2 glass-card p-4 rounded-xl flex items-center justify-between group cursor-pointer border border-transparent hover:border-secondary transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center">
