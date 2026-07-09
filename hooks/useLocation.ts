@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { reverseGeocode } from '@/lib/geocoding';
+import { syncNativeLocation } from '@/lib/native-bridge';
 
 const CACHE_KEY = 'salat_location_v2';
 
@@ -18,6 +19,7 @@ function saveLocation(data: Coordinates) {
   const payload = JSON.stringify(data);
   sessionStorage.setItem(CACHE_KEY, payload);
   localStorage.setItem(CACHE_KEY, payload);
+  void syncNativeLocation(data.lat, data.lng, data.label, data.source);
 }
 
 function loadCached(): Coordinates | null {
@@ -111,6 +113,18 @@ export function useLocation() {
       detect();
     }
   }, [detect]);
+
+  // Retry after native permission dialog closes (Capacitor / Android WebView).
+  useEffect(() => {
+    const retryIfNeeded = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!loadCached() && !coords) {
+        detect();
+      }
+    };
+    document.addEventListener('visibilitychange', retryIfNeeded);
+    return () => document.removeEventListener('visibilitychange', retryIfNeeded);
+  }, [detect, coords]);
 
   return {
     coords,

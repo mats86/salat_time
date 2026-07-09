@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="widget_name">Salat Zeit</string>
+    <string name="widget_description">Next prayer and countdown</string>
+    <string name="widget_next_prayer">NEXT PRAYER</string>
+    <string name="widget_in">in %1$s</string>
+    <string name="widget_now">Now</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="widget_location_needed">Enable location</string>
+    <string name="widget_offline">Offline – last times</string>
+    <string name="widget_error">Prayer times unavailable</string>
+
+    <string name="widget_countdown_name">Salat Zeit – Countdown</string>
+    <string name="widget_countdown_description">Next prayer with timer</string>
+    <string name="widget_schedule_name">Salat Zeit – Schedule</string>
+    <string name="widget_schedule_description">All daily prayer times</string>
+    <string name="widget_peace_name">Salat Zeit – Peace</string>
+    <string name="widget_peace_description">Al-Fatiha – scrolling Quran text</string>
+    <string name="widget_full_name">Salat Zeit – Overview</string>
+    <string name="widget_full_description">All prayer times and countdown</string>
+    <string name="widget_schedule_title">SCHEDULE</string>
+    <string name="widget_peace_quote">PRAYER IS PEACE</string>
+    <string name="widget_bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</string>
+    <string name="widget_prayer_in">%1$s in</string>
+
+    <string name="prayer_fajr">Fajr</string>
+    <string name="prayer_sunrise">Sunrise</string>
+    <string name="prayer_dhuhr">Dhuhr</string>
+    <string name="prayer_asr">Asr</string>
+    <string name="prayer_maghrib">Maghrib</string>
+    <string name="prayer_isha">Isha</string>
+    <string name="prayer_fajr_short">Fajr</string>
+    <string name="prayer_dhuhr_short">Dhuhr</string>
+    <string name="prayer_asr_short">Asr</string>
+    <string name="prayer_maghrib_short">Maghrib</string>
+    <string name="prayer_isha_short">Isha</string>
+
+    <string name="notify_channel_name">Prayer times</string>
+    <string name="notify_channel_desc">Silent notifications at prayer time</string>
+    <string name="notify_title">Time for %1$s</string>
+    <string name="notify_body">It is time for prayer.</string>
+</resources>

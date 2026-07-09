@@ -5,8 +5,9 @@ import { useLang } from '@/components/providers/LangProvider';
 import { usePrayerAlertSettings } from '@/hooks/usePrayerAlertSettings';
 import {
   canUsePrayerAlerts,
-  requestNotificationPermission,
+  requestPrayerAlertPermission,
   setPrayerAlertEnabled,
+  syncPrayerAlertScheduling,
   unlockAdhanAudio,
   type PrayerAlertName,
 } from '@/lib/prayer-alerts';
@@ -33,8 +34,8 @@ export function SettingsPrayerToggle({ prayer, icon, label }: SettingsPrayerTogg
       return;
     }
 
-    const permission = await requestNotificationPermission();
-    if (permission === 'denied') {
+    const granted = await requestPrayerAlertPermission();
+    if (!granted) {
       showHint(tr.alertPermissionDenied);
       return;
     }
@@ -44,6 +45,7 @@ export function SettingsPrayerToggle({ prayer, icon, label }: SettingsPrayerTogg
     }
 
     setPrayerAlertEnabled(prayer, checked);
+    await syncPrayerAlertScheduling();
 
     if ('vibrate' in navigator) {
       navigator.vibrate(10);

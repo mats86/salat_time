@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { isPwaInstalled } from '@/lib/biometric';
 import { getPrayerLabel } from '@/lib/i18n';
 import { cacheSchedulePayload, getCachedSchedulePayload } from '@/lib/offline-cache';
@@ -113,7 +114,23 @@ export function resetAllPrayerAlerts(): void {
 
 export function canUsePrayerAlerts(): boolean {
   if (typeof window === 'undefined') return false;
+  if (Capacitor.isNativePlatform()) return true;
   return isPwaInstalled() && 'Notification' in window;
+}
+
+export async function requestPrayerAlertPermission(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  if (Capacitor.isNativePlatform()) {
+    const { requestNativeNotificationPermission } = await import('@/lib/native-bridge');
+    return requestNativeNotificationPermission();
+  }
+  return (await requestNotificationPermission()) === 'granted';
+}
+
+export async function syncPrayerAlertScheduling(): Promise<void> {
+  if (!Capacitor.isNativePlatform()) return;
+  const { refreshNativeNotifications } = await import('@/lib/native-bridge');
+  await refreshNativeNotifications();
 }
 
 export async function requestNotificationPermission(): Promise<NotificationPermission> {

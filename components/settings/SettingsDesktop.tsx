@@ -7,6 +7,7 @@ import type { Lang } from '@/types';
 import { useLang } from '@/components/providers/LangProvider';
 import { getAppBrandName, getPrayerLabel, getCalcMethodDesc } from '@/lib/i18n';
 import { SettingsDesktopNotificationRow } from '@/components/settings/SettingsDesktopNotificationRow';
+import { SettingsMasterNotificationToggle } from '@/components/settings/SettingsMasterNotificationToggle';
 import { resetAllPrayerAlerts } from '@/lib/prayer-alerts';
 import {
   CALC_METHOD_OPTIONS,
@@ -371,6 +372,9 @@ export function SettingsDesktop() {
               </button>
             </div>
             <div className="space-y-4">
+              <div className="glass-card rounded-lg overflow-hidden">
+                <SettingsMasterNotificationToggle />
+              </div>
               <SettingsDesktopNotificationRow
                 prayer="Fajr"
                 icon="wb_twilight"

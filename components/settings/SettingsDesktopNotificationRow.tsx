@@ -5,8 +5,9 @@ import { useLang } from '@/components/providers/LangProvider';
 import { usePrayerAlertSettings } from '@/hooks/usePrayerAlertSettings';
 import {
   canUsePrayerAlerts,
-  requestNotificationPermission,
+  requestPrayerAlertPermission,
   setPrayerAlertEnabled,
+  syncPrayerAlertScheduling,
   unlockAdhanAudio,
   type PrayerAlertName,
 } from '@/lib/prayer-alerts';
@@ -49,8 +50,8 @@ export function SettingsDesktopNotificationRow({
       return;
     }
 
-    const permission = await requestNotificationPermission();
-    if (permission === 'denied') {
+    const granted = await requestPrayerAlertPermission();
+    if (!granted) {
       showHint(tr.alertPermissionDenied);
       return;
     }
@@ -60,6 +61,7 @@ export function SettingsDesktopNotificationRow({
     }
 
     setPrayerAlertEnabled(prayer, checked);
+    await syncPrayerAlertScheduling();
   };
 
   return (

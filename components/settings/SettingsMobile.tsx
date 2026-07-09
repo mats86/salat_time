@@ -15,6 +15,7 @@ import {
 } from '@/lib/calc-settings';
 import { useCalcSettings } from '@/hooks/useCalcSettings';
 import { SettingsPrayerToggle } from '@/components/settings/SettingsPrayerToggle';
+import { SettingsMasterNotificationToggle } from '@/components/settings/SettingsMasterNotificationToggle';
 import { cn } from '@/lib/utils';
 
 const APP_VERSION = '2.4.0-gold';
@@ -188,6 +189,7 @@ export function SettingsMobile() {
           {tr.settingsNotifications}
         </h2>
         <div className="settings-glass-card rounded-xl overflow-hidden divide-y divide-white/5">
+          <SettingsMasterNotificationToggle />
           {PRAYER_ALERT_NAMES.map((prayer) => (
             <SettingsPrayerToggle
               key={prayer}

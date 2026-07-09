@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_full_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_glass_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:id="@+id/widget_full_left"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.42"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/widget_full_icon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/widget_full_name"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_launcher" />
+
+        <TextView
+            android:id="@+id/widget_full_next_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textColor="@color/widget_gold"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
+        <Chronometer
+            android:id="@+id/widget_full_chronometer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:countDown="true"
+            android:format="%s"
+            android:gravity="center"
+            android:textColor="@color/widget_gold_light"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_full_timer_static"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:textColor="@color/widget_gold_light"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/widget_full_offline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="8sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:background="#40c9a84c"
+        android:text="" />
+
+    <LinearLayout
+        android:id="@+id/widget_full_right"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.58"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_full_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/widget_schedule_title"
+            android:textColor="@color/widget_gold"
+            android:textSize="8sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/full_row_fajr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+
+            <ImageView
+                android:id="@+id/full_fajr_icon"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/prayer_fajr"
+                android:src="@drawable/widget_icon_sun" />
+
+            <TextView
+                android:id="@+id/full_fajr_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/prayer_fajr_short"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/full_fajr_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:maxLines="1"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/full_row_dhuhr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+
+            <ImageView
+                android:id="@+id/full_dhuhr_icon"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/prayer_dhuhr"
+                android:src="@drawable/widget_icon_sun" />
+
+            <TextView
+                android:id="@+id/full_dhuhr_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/prayer_dhuhr_short"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/full_dhuhr_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:maxLines="1"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/full_row_asr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+
+            <ImageView
+                android:id="@+id/full_asr_icon"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/prayer_asr"
+                android:src="@drawable/widget_icon_sun" />
+
+            <TextView
+                android:id="@+id/full_asr_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/prayer_asr_short"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/full_asr_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:maxLines="1"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/full_row_maghrib"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+
+            <ImageView
+                android:id="@+id/full_maghrib_icon"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/prayer_maghrib"
+                android:src="@drawable/widget_icon_moon" />
+
+            <TextView
+                android:id="@+id/full_maghrib_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/prayer_maghrib_short"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/full_maghrib_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:maxLines="1"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/full_row_isha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp">
+
+            <ImageView
+                android:id="@+id/full_isha_icon"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:contentDescription="@string/prayer_isha"
+                android:src="@drawable/widget_icon_moon" />
+
+            <TextView
+                android:id="@+id/full_isha_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/prayer_isha_short"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/full_isha_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="3dp"
+                android:maxLines="1"
+                android:textColor="@color/widget_text_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/widget_full_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center"
+            android:textColor="@color/widget_text_muted"
+            android:textSize="9sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

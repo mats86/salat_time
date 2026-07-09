@@ -6,9 +6,17 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android",
+    "cap:assets": "capacitor-assets generate --android --iconBackgroundColor \"#061f1a\" --splashBackgroundColor \"#061f1a\" && node scripts/fix-android-icons.mjs",
+    "cap:build:android": "cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/geolocation": "^8.2.0",
+    "@capacitor/preferences": "^8.0.1",
     "@directus/sdk": "^22.0.0",
     "@ducanh2912/next-pwa": "^10.2.9",
     "clsx": "^2.1.1",
@@ -18,6 +26,8 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.4.1",
     "@tailwindcss/postcss": "^4.3.1",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useLang } from '@/components/providers/LangProvider';
 import { getAppBrandName } from '@/lib/i18n';
 import { NavDrawer } from '@/components/layout/NavDrawer';
-import { MobileHeaderLangSwitcher } from '@/components/layout/MobileHeaderLangSwitcher';
 
 export function HomeHeader() {
   const { lang, tr } = useLang();
@@ -13,7 +12,7 @@ export function HomeHeader() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile h-16 bg-surface/40 backdrop-blur-md">
+      <header className="fixed top-0 left-0 w-full z-50 flex items-center px-margin-mobile h-16 bg-surface/40 backdrop-blur-md">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -30,7 +29,6 @@ export function HomeHeader() {
             {brandName}
           </h1>
         </div>
-        <MobileHeaderLangSwitcher />
       </header>
 
       <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />

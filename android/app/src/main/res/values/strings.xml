@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Salat Zeit</string>
+    <string name="title_activity_main">Salat Zeit</string>
+    <string name="package_name">de.salatzeit.app</string>
+    <string name="custom_url_scheme">de.salatzeit.app</string>
+
+    <string name="widget_name">Salat Zeit</string>
+    <string name="widget_description">Nächstes Gebet und Countdown</string>
+    <string name="widget_next_prayer">NÄCHSTES GEBET</string>
+    <string name="widget_in">in %1$s</string>
+    <string name="widget_now">Jetzt</string>
+    <string name="widget_loading">Wird geladen…</string>
+    <string name="widget_location_needed">Standort freigeben</string>
+    <string name="widget_offline">Offline – letzte Zeiten</string>
+    <string name="widget_error">Gebetszeiten nicht verfügbar</string>
+
+    <string name="widget_countdown_name">Salat Zeit – Countdown</string>
+    <string name="widget_countdown_description">Nächstes Gebet mit Timer</string>
+    <string name="widget_schedule_name">Salat Zeit – Tagesplan</string>
+    <string name="widget_schedule_description">Alle Gebetszeiten des Tages</string>
+    <string name="widget_peace_name">Salat Zeit – Frieden</string>
+    <string name="widget_peace_description">Al-Fatiha – laufender Quran-Text</string>
+    <string name="widget_full_name">Salat Zeit – Übersicht</string>
+    <string name="widget_full_description">Alle Gebetszeiten und Countdown</string>
+    <string name="widget_schedule_title">GEBETSZEITEN</string>
+    <string name="widget_peace_quote">GEBET IST FRIEDEN</string>
+    <string name="widget_bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</string>
+    <string name="widget_prayer_in">%1$s in</string>
+
+    <string name="prayer_fajr">Morgengebet</string>
+    <string name="prayer_sunrise">Sonnenaufgang</string>
+    <string name="prayer_dhuhr">Mittagsgebet</string>
+    <string name="prayer_asr">Nachmittagsgebet</string>
+    <string name="prayer_maghrib">Abendgebet</string>
+    <string name="prayer_isha">Nachtgebet</string>
+    <string name="prayer_fajr_short">Fajr</string>
+    <string name="prayer_dhuhr_short">Dhuhr</string>
+    <string name="prayer_asr_short">Asr</string>
+    <string name="prayer_maghrib_short">Maghrib</string>
+    <string name="prayer_isha_short">Isha</string>
+
+    <string name="quran_fatiha_surah_title">سُورَةُ الْفَاتِحَة</string>
+    <string name="quran_fatiha_1">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</string>
+    <string name="quran_fatiha_2">الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ</string>
+    <string name="quran_fatiha_3">الرَّحْمَٰنِ الرَّحِيمِ</string>
+    <string name="quran_fatiha_4">مَالِكِ يَوْمِ الدِّينِ</string>
+    <string name="quran_fatiha_5">إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ</string>
+    <string name="quran_fatiha_6">اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ</string>
+    <string name="quran_fatiha_7">صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ</string>
+
+    <string name="notify_channel_name">Gebetszeiten</string>
+    <string name="notify_channel_desc">Stille Benachrichtigungen zur Gebetszeit</string>
+    <string name="notify_title">Zeit für %1$s</string>
+    <string name="notify_body">Es ist Zeit für das Gebet.</string>
+</resources>

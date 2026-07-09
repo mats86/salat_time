@@ -148,6 +148,8 @@ export const translations = {
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Doppelte Schattenlängen-Berechnung.',
     prayerAlertsAdhan: 'Gebetsalarme & Adhan',
+    prayerNotificationsMaster: 'Gebetszeit-Benachrichtigungen',
+    prayerNotificationsMasterDesc: 'Stille Benachrichtigung zur Gebetszeit (Fajr, Dhuhr, Asr, Maghrib, Isha).',
     resetAll: 'Alle zurücksetzen',
     adhanSound: 'Adhan-Klang',
     alertOnly: 'Nur Alarm',
@@ -471,6 +473,8 @@ export const translations = {
     asrHanafi: 'حنفي',
     asrHanafiDesc: 'حساب بطول ظل مضاعف.',
     prayerAlertsAdhan: 'تنبيهات الصلاة والأذان',
+    prayerNotificationsMaster: 'إشعارات أوقات الصلاة',
+    prayerNotificationsMasterDesc: 'إشعار صامت عند وقت الصلاة (الفجر، الظهر، العصر، المغرب، العشاء).',
     resetAll: 'إعادة تعيين الكل',
     adhanSound: 'صوت الأذان',
     alertOnly: 'تنبيه فقط',
@@ -786,6 +790,8 @@ export const translations = {
     asrHanafi: 'Hanafi',
     asrHanafiDesc: 'Double shadow length calculation.',
     prayerAlertsAdhan: "Prayer Alerts & Adhan",
+    prayerNotificationsMaster: 'Prayer time notifications',
+    prayerNotificationsMasterDesc: 'Silent notification at prayer time (Fajr, Dhuhr, Asr, Maghrib, Isha).',
     resetAll: 'Reset All',
     adhanSound: 'Adhan Sound',
     alertOnly: 'Alert Only',
@@ -1013,6 +1019,9 @@ export function setDocumentLanguage(lang: Lang) {
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   localStorage.setItem('lang', lang);
+  if (typeof window !== 'undefined') {
+    void import('@/lib/native-bridge').then(({ syncNativeSettings }) => syncNativeSettings());
+  }
 }
 
 export function getStoredLanguage(): Lang {

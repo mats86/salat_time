@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="widget_name">صلاة</string>
+    <string name="widget_description">الصلاة القادمة والعد التنازلي</string>
+    <string name="widget_next_prayer">الصلاة القادمة</string>
+    <string name="widget_in">بعد %1$s</string>
+    <string name="widget_now">الآن</string>
+    <string name="widget_loading">جارٍ التحميل…</string>
+    <string name="widget_location_needed">فعّل الموقع</string>
+    <string name="widget_offline">بدون اتصال – آخر الأوقات</string>
+    <string name="widget_error">أوقات الصلاة غير متاحة</string>
+
+    <string name="widget_countdown_name">صلاة – العد التنازلي</string>
+    <string name="widget_countdown_description">الصلاة القادمة مع المؤقت</string>
+    <string name="widget_schedule_name">صلاة – الجدول</string>
+    <string name="widget_schedule_description">جميع أوقات الصلاة اليوم</string>
+    <string name="widget_full_name">صلاة – نظرة عامة</string>
+    <string name="widget_full_description">جميع أوقات الصلاة والعد التنازلي</string>
+    <string name="widget_peace_name">صلاة – السلام</string>
+    <string name="widget_peace_description">الفاتحة – نص قرآني متحرك</string>
+    <string name="widget_schedule_title">جدول اليوم</string>
+    <string name="widget_peace_quote">الصلاة سلام</string>
+    <string name="widget_bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم</string>
+    <string name="widget_prayer_in">%1$s بعد</string>
+
+    <string name="prayer_fajr">الفجر</string>
+    <string name="prayer_sunrise">الشروق</string>
+    <string name="prayer_dhuhr">الظهر</string>
+    <string name="prayer_asr">العصر</string>
+    <string name="prayer_maghrib">المغرب</string>
+    <string name="prayer_isha">العشاء</string>
+    <string name="prayer_fajr_short">الفجر</string>
+    <string name="prayer_dhuhr_short">الظهر</string>
+    <string name="prayer_asr_short">العصر</string>
+    <string name="prayer_maghrib_short">المغرب</string>
+    <string name="prayer_isha_short">العشاء</string>
+
+    <string name="notify_channel_name">أوقات الصلاة</string>
+    <string name="notify_channel_desc">إشعارات صامتة عند وقت الصلاة</string>
+    <string name="notify_title">حان وقت %1$s</string>
+    <string name="notify_body">حان وقت الصلاة.</string>
+</resources>
