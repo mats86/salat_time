@@ -128,3 +128,24 @@ export interface DayPrayerSchedule {
   schedule: MergedPrayerTime[];
   isToday: boolean;
 }
+
+export interface RouteMosque extends Mosque {
+  distanceFromRouteKm: number;
+  routePositionKm: number;
+  detourMinutes?: number | null;
+}
+
+export interface RoutePlan {
+  geometry: [number, number][];
+  distanceKm: number;
+  durationMin: number;
+  mosques: RouteMosque[];
+}
+
+export interface RoutePoint {
+  lat: number;
+  lng: number;
+  label: string;
+}
+
+export type RoutePlannerStatus = 'idle' | 'loading' | 'done' | 'error';

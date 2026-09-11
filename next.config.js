@@ -20,6 +20,7 @@ const withPWA = withPWAInit({
     additionalManifestEntries: [
       { url: '/offline.html', revision: null },
       { url: '/qibla', revision: null },
+      { url: '/route', revision: null },
       { url: '/calendar', revision: null },
       { url: '/settings', revision: null },
       { url: '/fonts/material-symbols-outlined.ttf', revision: null },

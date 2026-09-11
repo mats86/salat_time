@@ -32,6 +32,12 @@ export function BottomNav() {
       active: pathname === '/' && hash === '#mosques',
     },
     {
+      href: '/route',
+      icon: 'alt_route',
+      label: tr.navRoute,
+      active: pathname === '/route',
+    },
+    {
       href: '/qibla',
       icon: 'explore',
       label: tr.qibla,

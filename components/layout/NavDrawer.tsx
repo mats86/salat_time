@@ -54,6 +54,7 @@ export function NavDrawer({ open, onClose }: NavDrawerProps) {
     { href: '/', icon: 'home', label: tr.navHome },
     { href: '/calendar', icon: 'calendar_month', label: tr.navPrayerTimes },
     { href: '/#mosques', icon: 'explore', label: tr.mosques },
+    { href: '/route', icon: 'alt_route', label: tr.navRoute },
     { href: '/qibla', icon: 'explore_off', label: tr.qibla },
     { href: '/auth/login', icon: 'groups', label: tr.navCommunity },
   ] as const;

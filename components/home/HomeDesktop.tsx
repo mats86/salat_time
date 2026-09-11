@@ -374,6 +374,16 @@ export function HomeDesktop({
 
             <div id="qibla" className="grid grid-cols-2 gap-4 scroll-mt-24">
               <Link
+                href="/route"
+                className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent"
+              >
+                <span className="material-symbols-outlined text-secondary text-4xl mb-2">alt_route</span>
+                <span className="font-title-md text-title-md">{tr.routeFindMosques}</span>
+                <span className="font-label-caps text-[10px] text-on-surface-variant mt-1">
+                  {tr.routeFindMosquesSub}
+                </span>
+              </Link>
+              <Link
                 href="/qibla"
                 className="glass-card p-stack-md rounded-xl flex flex-col items-center justify-center text-center cursor-pointer hover:border-secondary transition-colors active:scale-95 border border-transparent"
               >
