@@ -13,18 +13,23 @@ export function useRoutePlanner() {
   const [plan, setPlan] = useState<RoutePlan | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const calculate = useCallback(async () => {
-    if (!start || !end) return;
+  const calculate = useCallback(async (overrides?: { start?: RoutePoint; end?: RoutePoint }) => {
+    const resolvedStart = overrides?.start ?? start;
+    const resolvedEnd = overrides?.end ?? end;
+    if (!resolvedStart || !resolvedEnd) return;
+
+    if (overrides?.start) setStart(overrides.start);
+    if (overrides?.end) setEnd(overrides.end);
 
     setStatus('loading');
     setError(null);
 
     try {
       const params = new URLSearchParams({
-        startLat: String(start.lat),
-        startLng: String(start.lng),
-        endLat: String(end.lat),
-        endLng: String(end.lng),
+        startLat: String(resolvedStart.lat),
+        startLng: String(resolvedStart.lng),
+        endLat: String(resolvedEnd.lat),
+        endLng: String(resolvedEnd.lng),
         profile,
         bufferKm: String(bufferKm),
       });
@@ -65,6 +70,5 @@ export function useRoutePlanner() {
     error,
     calculate,
     reset,
-    canCalculate: Boolean(start && end),
   };
 }

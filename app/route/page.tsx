@@ -46,12 +46,22 @@ export default function RoutePage() {
     plan,
     error,
     calculate,
-    canCalculate,
+    reset,
   } = useRoutePlanner();
 
   const loading = status === 'loading';
   const showResults = status === 'done' && plan;
   const [pendingStartFromGps, setPendingStartFromGps] = useState(false);
+
+  const scrollToResults = () => {
+    document.getElementById('route-results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  useEffect(() => {
+    if (status === 'done' && plan) {
+      scrollToResults();
+    }
+  }, [status, plan]);
 
   useEffect(() => {
     if (pendingStartFromGps && coords?.label) {
@@ -94,13 +104,15 @@ export default function RoutePage() {
               onBufferChange={setBufferKm}
               onCalculate={calculate}
               onUseMyLocation={handleUseMyLocation}
+              onViewResults={scrollToResults}
+              status={status}
+              plan={plan}
               loading={loading}
               loadingGps={locLoading}
-              canCalculate={canCalculate}
             />
           </Card>
 
-          <div className="space-y-6 min-w-0">
+          <div id="route-results" className="space-y-6 min-w-0 scroll-mt-24">
             {error && (
               <Card className="p-4 border-error/30 bg-error/10">
                 <p className="font-body-sm text-body-sm text-error">{tr.routeError}</p>
@@ -108,11 +120,13 @@ export default function RoutePage() {
             )}
 
             {!showResults && !loading && (
-              <Card className="p-8 text-center hidden md:block">
+              <Card className="p-8 text-center">
                 <span className="material-symbols-outlined text-5xl text-on-surface-variant mb-3">
                   route
                 </span>
-                <p className="font-body-sm text-body-sm text-on-surface-variant">{tr.routeSubtitle}</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant">
+                  {start && end ? tr.routeTapCalculate : tr.routeSubtitle}
+                </p>
               </Card>
             )}
 
